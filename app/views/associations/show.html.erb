@@ -1,0 +1,116 @@
+<div class="flex items-start justify-between mb-5">
+  <div>
+    <div class="flex items-center gap-2 mb-1">
+      <%= link_to associations_path, class: "text-xs text-slate-400 hover:text-slate-600 transition-colors" do %>
+        ← Associations
+      <% end %>
+    </div>
+    <h1 class="text-lg font-semibold text-slate-900"><%= @association.nom %></h1>
+    <p class="text-sm text-slate-500"><%= [@association.ville, @association.siren.present? ? "SIREN #{@association.siren}" : nil, @association.cloture ? "Clôture #{@association.cloture.strftime('%d/%m/%Y')}" : nil].compact.join(' · ') %></p>
+  </div>
+  <div class="flex gap-2">
+    <%= button_to relancer_extraction_association_path(@association), method: :post, class: "inline-flex items-center gap-1.5 text-sm border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer" do %>
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Relancer
+    <% end %>
+    <%= button_to association_path(@association), method: :delete, data: { confirm: "Supprimer #{@association.nom} ?" }, class: "text-sm border border-red-100 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer" do %>
+      Supprimer
+    <% end %>
+  </div>
+</div>
+
+<div class="grid grid-cols-3 gap-3 mb-4">
+  <% [
+    ["Total produits", number_to_human(@association.total_produits, units: { thousand: "k€", million: "M€" }, precision: 1), "text-slate-900"],
+    ["Résultat exploitation", @association.resultat_exploitation ? "#{@association.resultat_exploitation >= 0 ? '+' : ''}#{number_to_human(@association.resultat_exploitation, units: { thousand: 'k€' }, precision: 1)}" : '—', @association.resultat_exploitation.to_i < 0 ? 'text-red-500' : 'text-teal-600'],
+    ["Résultat net", @association.resultat_net ? "#{@association.resultat_net >= 0 ? '+' : ''}#{number_to_human(@association.resultat_net, units: { thousand: 'k€' }, precision: 1)}" : '—', @association.resultat_net.to_i < 0 ? 'text-red-500' : 'text-teal-600'],
+    ["Fonds propres", number_to_human(@association.fonds_propres, units: { thousand: "k€", million: "M€" }, precision: 1), "text-slate-900"],
+    ["Trésorerie", number_to_human(@association.tresorerie, units: { thousand: "k€", million: "M€" }, precision: 1), "text-slate-900"],
+    ["Total bilan", number_to_human(@association.total_bilan, units: { thousand: "k€", million: "M€" }, precision: 1), "text-slate-900"],
+  ].each do |label, value, color| %>
+    <div class="bg-white border border-slate-200 rounded-xl p-4">
+      <div class="text-xs text-slate-400 mb-1.5 font-medium uppercase tracking-wide"><%= label %></div>
+      <div class="text-xl font-bold <%= color %>"><%= value %></div>
+    </div>
+  <% end %>
+</div>
+
+<div class="grid grid-cols-2 gap-4">
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Ratios financiers</h2>
+    <dl class="space-y-2">
+      <% [
+        ["Subventions / produits", @association.subv_sur_produits_pct ? "#{@association.subv_sur_produits_pct}%" : "—"],
+        ["Masse salariale / charges", @association.masse_sal_pct ? "#{@association.masse_sal_pct}%" : "—"],
+        ["Fonds propres / bilan", @association.fp_bilan_pct ? "#{@association.fp_bilan_pct}%" : "—"],
+        ["ETP moyen", @association.etp || "—"],
+        ["Emprunts", @association.emprunts ? number_to_human(@association.emprunts, units: { thousand: "k€" }, precision: 1) : "—"],
+        ["CAC certifié", @association.cac_certifie? ? "✓ Oui" : "Non"],
+      ].each do |label, value| %>
+        <div class="flex justify-between items-center py-1 border-b border-slate-50 last:border-0">
+          <dt class="text-xs text-slate-500"><%= label %></dt>
+          <dd class="text-xs font-medium text-slate-700"><%= value %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Labellisation Vigil'Asso</h2>
+    <%= form_with model: @association, local: true do |f| %>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-slate-500 block mb-1">Statut financier</label>
+          <%= f.select :statut, Association.statuts.keys.map { |s| [s, s] }, {},
+            class: "block w-full text-sm border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none" %>
+        </div>
+        <div>
+          <label class="text-xs text-slate-500 block mb-1">Label Vigil'Asso</label>
+          <%= f.select :label_vigi, [["— non labellisé —", nil]] + Association.label_vigis.keys.map { |l| [l, l] }, {},
+            class: "block w-full text-sm border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none" %>
+        </div>
+        <div>
+          <label class="text-xs text-slate-500 block mb-1">Notes</label>
+          <%= f.text_area :notes, rows: 3,
+            class: "block w-full text-sm border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none resize-none" %>
+        </div>
+        <%= f.submit "Enregistrer", class: "w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% if @association.notes.present? %>
+  <div class="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-2.5">
+    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+    <p class="text-sm text-amber-800"><span class="font-medium">Note d'extraction :</span> <%= @association.notes %></p>
+  </div>
+<% end %>
+
+<% if @association.score_vigi %>
+  <div class="mt-4 bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Score Vigil'Asso</h2>
+      <div class="flex items-center gap-3">
+        <%= niveau_badge(@association.niveau_vigi, score: @association.score_vigi) %>
+        <span class="text-xs text-slate-400"><%= ScoringService.niveau_info(@association.niveau_vigi)[:text] %></span>
+      </div>
+    </div>
+    <%= niveau_bar(@association.score_vigi) %>
+    <% if @association.score_detail.present? %>
+      <div class="mt-4 grid grid-cols-5 gap-2">
+        <% labels = { "rentabilite" => "Rentabilité", "solidite" => "Solidité bilan", "liquidite" => "Liquidité", "autonomie" => "Autonomie", "gouvernance" => "Gouvernance" } %>
+        <% maxes  = { "rentabilite" => 30, "solidite" => 25, "liquidite" => 20, "autonomie" => 15, "gouvernance" => 10 } %>
+        <% @association.score_detail.each do |key, val| %>
+          <div class="text-center">
+            <div class="text-xs text-slate-400 mb-1"><%= labels[key] %></div>
+            <div class="text-sm font-bold text-slate-900"><%= val.round(1) %><span class="text-xs font-normal text-slate-400">/<%= maxes[key] %></span></div>
+            <div class="w-full bg-slate-100 rounded-full h-1 mt-1">
+              <div class="bg-indigo-400 h-1 rounded-full" style="width: <%= (val.to_f / maxes[key] * 100).clamp(0,100).round %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

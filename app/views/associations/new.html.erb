@@ -1,0 +1,76 @@
+<div class="max-w-xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-lg font-semibold text-slate-900">Importer des documents comptables</h1>
+    <p class="text-sm text-slate-500 mt-0.5">Jusqu'à 10 PDFs par lot. Claude extrait automatiquement les données de chaque fichier.</p>
+  </div>
+
+  <%= form_with url: associations_path, multipart: true, data: { controller: "upload" } do |f| %>
+    <div class="bg-white border border-slate-200 rounded-xl p-6 mb-4">
+      <label class="block text-sm font-medium text-slate-700 mb-3">Fichiers PDF</label>
+
+      <div class="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center hover:border-indigo-300 transition-colors">
+        <svg class="w-10 h-10 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-sm text-slate-500 mb-1">Bilans et comptes de résultat</p>
+        <p class="text-xs text-slate-400 mb-3">Sélection multiple autorisée (max. 10 fichiers)</p>
+        <input type="file" name="pdfs[]" accept="application/pdf" multiple required
+               id="pdf-input"
+               onchange="updateFileList(this)"
+               class="block w-full text-sm text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer transition-colors">
+      </div>
+
+      <div id="file-list" class="mt-3 hidden">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-medium text-slate-600">Fichiers sélectionnés</span>
+          <span id="file-count" class="text-xs text-slate-400"></span>
+        </div>
+        <ul id="file-names" class="space-y-1"></ul>
+      </div>
+
+      <div class="mt-4 bg-indigo-50 rounded-lg p-3 flex gap-2.5">
+        <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-xs text-indigo-700">L'extraction prend ~10s par fichier. Pour 10 PDFs, comptez environ 2 minutes. Ne fermez pas la page pendant le traitement.</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" id="submit-btn"
+              onclick="this.disabled=true; this.innerHTML='Extraction en cours…'; this.form.submit();"
+              class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        Extraire et importer
+      </button>
+      <%= link_to "Annuler", associations_path, class: "text-sm text-slate-500 hover:text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors" %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+function updateFileList(input) {
+  const files = Array.from(input.files);
+  const listDiv = document.getElementById('file-list');
+  const countEl = document.getElementById('file-count');
+  const namesEl = document.getElementById('file-names');
+
+  if (files.length === 0) { listDiv.classList.add('hidden'); return; }
+
+  listDiv.classList.remove('hidden');
+  countEl.textContent = files.length + ' fichier' + (files.length > 1 ? 's' : '') + (files.length > 10 ? ' — ⚠ maximum 10' : '');
+  countEl.className = files.length > 10 ? 'text-xs text-red-500 font-medium' : 'text-xs text-slate-400';
+
+  namesEl.innerHTML = files.map((f, i) => `
+    <li class="flex items-center gap-2 text-xs py-1 px-2 rounded ${i >= 10 ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-600'}">
+      <svg class="w-3 h-3 shrink-0 ${i >= 10 ? 'text-red-400' : 'text-slate-400'}" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+      </svg>
+      ${f.name}
+      ${i >= 10 ? '<span class="ml-auto">ignoré</span>' : ''}
+    </li>
+  `).join('');
+}
+</script>
