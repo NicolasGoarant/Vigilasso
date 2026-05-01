@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_16_185912) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_01_170926) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,7 +67,41 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_16_185912) do
     t.integer "score_vigi"
     t.string "niveau_vigi", limit: 1
     t.jsonb "score_detail"
+    t.boolean "defaillance_bodacc"
+    t.date "date_jugement"
+    t.string "nature_jugement"
     t.index ["siren", "cloture"], name: "index_associations_on_siren_and_cloture", unique: true
+  end
+
+  create_table "compte_annuels", force: :cascade do |t|
+    t.string "siren"
+    t.string "jo_id"
+    t.date "date_cloture"
+    t.integer "exercice"
+    t.string "pdf_path"
+    t.string "statut"
+    t.integer "total_bilan"
+    t.integer "total_actif_immobilise"
+    t.integer "total_actif_circulant"
+    t.integer "fonds_propres"
+    t.integer "dettes_total"
+    t.integer "provisions"
+    t.integer "produits_exploitation"
+    t.integer "charges_exploitation"
+    t.integer "resultat_exploitation"
+    t.integer "produits_financiers"
+    t.integer "charges_financieres"
+    t.integer "resultat_financier"
+    t.integer "resultat_exceptionnel"
+    t.integer "resultat_net"
+    t.integer "subventions"
+    t.integer "masse_salariale"
+    t.integer "charges_sociales"
+    t.decimal "effectif_etp"
+    t.text "raw_json"
+    t.text "erreur"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

@@ -2,9 +2,17 @@ class AssociationsController < ApplicationController
   MAX_PDFS = 10
 
   def index
-    @associations = Association.all.order(created_at: :desc)
+    @filter = params[:filter] || "all"
+    @associations = case @filter
+                    when "defaillantes" then Association.defaillantes
+                    when "saines"       then Association.saines
+                    else                     Association.all
+                    end.order(created_at: :desc)
+
+    total = Association.count
     @stats = {
-      total: @associations.count,
+      total: total,
+      defaillantes: Association.defaillantes.count,
       deficitaires: @associations.deficit.count,
       non_labellises: @associations.non_labellises.count,
       budget_total: @associations.sum(:total_produits),
@@ -22,25 +30,19 @@ class AssociationsController < ApplicationController
 
   def create
     pdfs = Array(params[:pdfs]).compact.reject { |f| f.blank? }
-
     if pdfs.empty?
       redirect_to new_association_path, alert: "Aucun fichier sélectionné." and return
     end
-
     if pdfs.size > MAX_PDFS
       redirect_to new_association_path, alert: "Maximum #{MAX_PDFS} fichiers par lot." and return
     end
-
     results = { success: [], errors: [] }
-
     pdfs.each do |pdf|
       data = ExtractionService.new(pdf.tempfile.path).call
-
       if data[:error]
         results[:errors] << "#{pdf.original_filename} : #{data[:error]}"
         next
       end
-
       association = Association.new(
         siren:                  data["siren"],
         nom:                    data["nom"],
@@ -63,18 +65,15 @@ class AssociationsController < ApplicationController
         extraction_raw:         data
       )
       association.pdf.attach(pdf)
-
       if association.save
         results[:success] << association.nom
       else
         results[:errors] << "#{pdf.original_filename} : #{association.errors.full_messages.join(', ')}"
       end
     end
-
     msg_parts = []
     msg_parts << "#{results[:success].size} association(s) importée(s) : #{results[:success].join(', ')}." if results[:success].any?
     msg_parts << "#{results[:errors].size} erreur(s) : #{results[:errors].join(' | ')}" if results[:errors].any?
-
     if results[:success].any?
       redirect_to associations_path, notice: msg_parts.join(" — ")
     else
@@ -102,10 +101,8 @@ class AssociationsController < ApplicationController
     tmp.binmode
     tmp.write(@association.pdf.download)
     tmp.rewind
-
     data = ExtractionService.new(tmp.path).call
     tmp.close
-
     if data[:error]
       redirect_to @association, alert: "Erreur : #{data[:error]}"
     else

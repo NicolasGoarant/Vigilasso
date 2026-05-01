@@ -15,6 +15,8 @@ class Association < ApplicationRecord
   scope :deficitaires,    -> { where(statut: :deficit) }
   scope :non_labellises,  -> { where(niveau_vigi: nil) }
   scope :avec_pdf,        -> { joins(:pdf_attachment) }
+  scope :defaillantes,    -> { where(defaillance_bodacc: true) }
+  scope :saines,          -> { where(defaillance_bodacc: [false, nil]) }
 
   before_save :calculer_score
 
