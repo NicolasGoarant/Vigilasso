@@ -38,3 +38,4 @@
 !/app/assets/builds/.keep
 data/pdfs_positifs/
 data/telechargements_log.csv
+data/scoring_logs/
