@@ -1,7 +1,6 @@
 """
-Construit un dataset unifié défaillantes + saines.
-SIREN et date de clôture sont récupérés depuis le nom de fichier (fiable),
-pas depuis l'extraction Claude (souvent vide).
+Construit un dataset unifié défaillantes + saines avec métadonnées INSEE.
+SIREN et date de clôture depuis le nom de fichier (fiable).
 """
 
 import pandas as pd
@@ -9,29 +8,27 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-POSITIFS = ROOT / "data" / "scores_positifs.csv"
-SAINES   = ROOT / "data" / "scores_saines.csv"
-OUT      = ROOT / "ml" / "data" / "dataset.csv"
+POSITIFS  = ROOT / "data" / "scores_positifs.csv"
+SAINES    = ROOT / "data" / "scores_saines.csv"
+BODACC_META = ROOT / "bodacc_associations_enrichi.csv"
+SAINES_META = ROOT / "data" / "saines_enrichi.csv"
+OUT       = ROOT / "ml" / "data" / "dataset.csv"
 
 PATTERN = re.compile(r"^(\d{9})_(\d{2})(\d{2})(\d{4})\.pdf$")
 
 def parse_filename(fichier):
-    """Extrait SIREN + date de clôture depuis 'SIREN_DDMMYYYY.pdf'."""
     m = PATTERN.match(fichier)
     if not m:
         return pd.NA, pd.NA
-    siren = m.group(1)
-    cloture = f"{m.group(4)}-{m.group(3)}-{m.group(2)}"  # YYYY-MM-DD
-    return siren, cloture
+    return m.group(1), f"{m.group(4)}-{m.group(3)}-{m.group(2)}"
 
 def load_and_label(path, label):
     df = pd.read_csv(path)
     df = df[df["niveau"].notna() & df["error"].isna()].copy()
-    # Récupère SIREN + cloture depuis le nom du fichier
     parsed = df["fichier"].apply(parse_filename)
-    df["siren_clean"]   = parsed.apply(lambda x: x[0])
-    df["cloture_clean"] = parsed.apply(lambda x: x[1])
-    df["label"] = label
+    df["siren"]   = parsed.apply(lambda x: x[0])
+    df["cloture"] = parsed.apply(lambda x: x[1])
+    df["label"]   = label
     return df
 
 def add_ratios(df):
@@ -43,6 +40,16 @@ def add_ratios(df):
     df["ratio_resultat_net"] = df["resultat_net"] / tp
     return df
 
+def load_meta():
+    """Métadonnées INSEE pour défaillantes ET saines, au même format."""
+    bodacc = pd.read_csv(BODACC_META, dtype={"siren": str})
+    bodacc_meta = bodacc[["siren", "tranche_effectif", "activite_principale", "categorie", "departement"]].copy()
+
+    saines = pd.read_csv(SAINES_META, dtype={"siren": str})
+    saines_meta = saines[["siren", "tranche_effectif", "activite_principale", "categorie", "departement"]].copy()
+
+    return pd.concat([bodacc_meta, saines_meta], ignore_index=True).drop_duplicates("siren")
+
 def main():
     pos = load_and_label(POSITIFS, label=1)
     sai = load_and_label(SAINES, label=0)
@@ -52,18 +59,32 @@ def main():
     df = pd.concat([pos, sai], ignore_index=True)
     df = add_ratios(df)
 
-    # On utilise le SIREN/cloture extraits du filename, pas ceux de Claude
-    df["siren"]   = df["siren_clean"]
-    df["cloture"] = df["cloture_clean"]
+    # Jointure avec les métadonnées INSEE
+    meta = load_meta()
+    df = df.merge(meta, on="siren", how="left")
 
-    features = [
+    # Section APE = 2 premiers chiffres du code (regroupe les codes proches)
+    df["ape_section"] = df["activite_principale"].astype(str).str[:2]
+
+    # Tranche d'effectif numérique (codes INSEE 00, 01, 02, 03, 11, 12, 21, 22, 31, 32, 41, 42, 51, 52, 53)
+    # On convertit en niveau d'effectif moyen approximatif
+    tranche_to_etp = {
+        "00": 0, "01": 1.5, "02": 4, "03": 7.5,
+        "11": 14, "12": 34, "21": 74, "22": 149,
+        "31": 224, "32": 374, "41": 749, "42": 1499,
+        "51": 3499, "52": 7499, "53": 15000
+    }
+    df["effectif_estime"] = df["tranche_effectif"].astype(str).map(tranche_to_etp)
+
+    features_num = [
         "total_produits", "resultat_exploitation", "resultat_net",
-        "fonds_propres", "tresorerie", "total_bilan",
-        "subv_pct",
+        "fonds_propres", "tresorerie", "total_bilan", "subv_pct",
         "ratio_rentabilite", "ratio_solidite", "ratio_liquidite", "ratio_resultat_net",
-        "cac_certifie",
+        "cac_certifie", "effectif_estime"
     ]
-    keep = ["fichier", "siren", "cloture", "nom"] + features + ["label"]
+    features_cat = ["ape_section", "departement"]
+
+    keep = ["fichier", "siren", "cloture", "nom"] + features_num + features_cat + ["label"]
     df = df[keep]
 
     df["cac_certifie"] = df["cac_certifie"].map({"true": 1, "True": 1, True: 1,
@@ -72,19 +93,10 @@ def main():
     print(f"\n[info] Dataset final : {len(df)} lignes")
     print(f"  - Défaillantes : {(df['label']==1).sum()}")
     print(f"  - Saines       : {(df['label']==0).sum()}")
-    print(f"  - SIREN renseignés : {df['siren'].notna().sum()}")
-
-    print(f"\n[info] Distribution années par asso :")
-    counts = df.groupby("siren").size().value_counts().sort_index()
-    for n, k in counts.items():
-        print(f"    {n} année(s) : {k} assos")
-
-    n_multi = (df.groupby("siren").size() >= 2).sum()
-    n_multi_pos = (df[df["label"]==1].groupby("siren").size() >= 2).sum()
-    n_multi_sai = (df[df["label"]==0].groupby("siren").size() >= 2).sum()
-    print(f"\n[info] Assos avec ≥2 années (variations calculables) : {n_multi}")
-    print(f"  - Défaillantes : {n_multi_pos}")
-    print(f"  - Saines       : {n_multi_sai}")
+    print(f"\n[info] Couverture des nouvelles features :")
+    for col in ["effectif_estime", "ape_section", "departement"]:
+        n = df[col].notna().sum()
+        print(f"    {col:20s} : {n}/{len(df)} ({100*n/len(df):.0f}%)")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(OUT, index=False)
