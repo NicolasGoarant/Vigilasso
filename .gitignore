@@ -39,3 +39,5 @@
 data/pdfs_positifs/
 data/telechargements_log.csv
 data/scoring_logs/
+data/pdfs_saines/
+data/scoring_logs_saines/
