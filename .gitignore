@@ -41,3 +41,8 @@ data/telechargements_log.csv
 data/scoring_logs/
 data/pdfs_saines/
 data/scoring_logs_saines/
+*.bak
+vigilasso_app_dump.txt
+vigilasso_features.py
+vigilasso_model.py
+app/assets/fichiers_internes/

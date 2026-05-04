@@ -47,6 +47,9 @@ NIVEAUX = [
   { label: "A", min: 80 }, { label: "B", min: 60 }, { label: "C", min: 40 },
   { label: "D", min: 20 }, { label: "E", min: 0 }
 ]
+HEADERS = %w[fichier siren cloture nom ville total_produits resultat_exploitation
+             resultat_net fonds_propres tresorerie total_bilan subv_pct cac_certifie
+             statut score niveau pts_rent pts_soli pts_liqu pts_auto pts_gouv error]
 
 def extract(pdf_path, retry_429: true)
   pdf_data = Base64.strict_encode64(File.binread(pdf_path))
@@ -60,8 +63,7 @@ def extract(pdf_path, retry_429: true)
   req["anthropic-version"] = "2023-06-01"
   req["content-type"] = "application/json"
   req.body = {
-    model: MODEL,
-    max_tokens: 1024,
+    model: MODEL, max_tokens: 1024,
     messages: [{
       role: "user",
       content: [
@@ -72,13 +74,11 @@ def extract(pdf_path, retry_429: true)
   }.to_json
 
   res = http.request(req)
-
   if res.code == "429" && retry_429
     puts "    [429 rate limit] pause 60s puis retry"
     sleep 60
     return extract(pdf_path, retry_429: false)
   end
-
   return { error: "HTTP #{res.code}: #{res.body[0,200]}" } unless res.code == "200"
 
   body = JSON.parse(res.body)
@@ -96,55 +96,60 @@ def score(d)
     r = d["resultat_exploitation"].to_f / d["total_produits"]
     ((r + 0.3) / 0.6 * WEIGHTS[:rentabilite]).clamp(0, WEIGHTS[:rentabilite]).round(1)
   else 0 end
-
   detail[:solidite] = if d["total_bilan"].to_i > 0
     r = d["fonds_propres"].to_f / d["total_bilan"]
     (r / 0.8 * WEIGHTS[:solidite]).clamp(0, WEIGHTS[:solidite]).round(1)
   else 0 end
-
   detail[:liquidite] = if d["total_produits"].to_i > 0
     r = d["tresorerie"].to_f / d["total_produits"]
     (r / 0.5 * WEIGHTS[:liquidite]).clamp(0, WEIGHTS[:liquidite]).round(1)
   else 0 end
-
   detail[:autonomie] = if d["subv_sur_produits_pct"]
     a = (100 - d["subv_sur_produits_pct"]) / 100.0
     (a * WEIGHTS[:autonomie]).clamp(0, WEIGHTS[:autonomie]).round(1)
   else WEIGHTS[:autonomie] / 2.0 end
-
   detail[:gouvernance] = d["cac_certifie"] ? WEIGHTS[:gouvernance] : 0
-
   total = detail.values.sum.round
   niveau = NIVEAUX.find { |n| total >= n[:min] }[:label]
   [total, niveau, detail]
 end
 
+# Charger l'existant SANS écraser le fichier
 existing = {}
 if File.exist?(OUTPUT)
   CSV.foreach(OUTPUT, headers: true) do |row|
     fichier = row["fichier"]
     has_error = row["error"] && !row["error"].empty?
     has_score = row["niveau"] && !row["niveau"].empty?
-    existing[fichier] = { ok: has_score && !has_error, row: row }
+    existing[fichier] = { ok: has_score && !has_error, fields: row.fields }
   end
 end
 
 pdfs = Dir["#{PDF_DIR}/*.pdf"].sort
 to_process = pdfs.reject { |p| existing[File.basename(p)]&.dig(:ok) }
-puts "[info] #{pdfs.size} PDFs total, #{existing.size - to_process.size} déjà OK, #{to_process.size} à (re)traiter"
+puts "[info] #{pdfs.size} PDFs total, #{existing.count { |_, v| v[:ok] }} déjà OK, #{to_process.size} à (re)traiter"
 
-CSV.open(OUTPUT, "w", write_headers: true,
-         headers: %w[fichier siren cloture nom ville total_produits resultat_exploitation
-                     resultat_net fonds_propres tresorerie total_bilan subv_pct cac_certifie
-                     statut score niveau pts_rent pts_soli pts_liqu pts_auto pts_gouv error]) do |csv|
+# Écrire en MODE APPEND : on garde l'existant et on ajoute au fur et à mesure
+# D'abord on s'assure que l'en-tête existe
+if !File.exist?(OUTPUT) || File.size(OUTPUT) == 0
+  CSV.open(OUTPUT, "w") { |csv| csv << HEADERS }
+end
+
+# On va réécrire entièrement le CSV mais via fichier temporaire pour atomicité
+tmp_output = OUTPUT + ".tmp"
+CSV.open(tmp_output, "w") do |csv|
+  csv << HEADERS
+
+  # 1. Réécrire les lignes OK existantes
+  existing.each do |fichier, info|
+    if info[:ok]
+      csv << info[:fields]
+    end
+  end
 
   pdfs.each_with_index do |pdf, i|
     fichier = File.basename(pdf)
-
-    if existing[fichier]&.dig(:ok)
-      csv << existing[fichier][:row].fields
-      next
-    end
+    next if existing[fichier]&.dig(:ok)
 
     puts "[#{i+1}/#{pdfs.size}] #{fichier}"
     d = extract(pdf)
@@ -152,6 +157,7 @@ CSV.open(OUTPUT, "w", write_headers: true,
 
     if d["error"] || d[:error]
       csv << [fichier] + Array.new(15) + [(d[:error] || d["error"]).to_s[0,200]]
+      csv.flush
       sleep SLEEP_BETWEEN
       next
     end
@@ -167,13 +173,17 @@ CSV.open(OUTPUT, "w", write_headers: true,
       detail[:autonomie], detail[:gouvernance],
       nil
     ]
+    csv.flush
     sleep SLEEP_BETWEEN
   end
 end
 
+# Renommage atomique
+File.rename(tmp_output, OUTPUT)
+
 puts "\n[done] -> #{OUTPUT}"
-puts "\n=== Distribution des niveaux SAINES ==="
 data = CSV.read(OUTPUT, headers: true)
+puts "\n=== Distribution finale ==="
 data.group_by { |r| r["niveau"] || "ERREUR" }.sort_by { |k, _| k.to_s }.each do |niv, rows|
   pct = (100.0 * rows.size / data.size).round(1)
   puts "  #{niv}: #{rows.size.to_s.rjust(3)} (#{pct}%)"

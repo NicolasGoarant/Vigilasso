@@ -45,7 +45,7 @@ def load_meta():
     bodacc = pd.read_csv(BODACC_META, dtype={"siren": str})
     bodacc_meta = bodacc[["siren", "tranche_effectif", "activite_principale", "categorie", "departement"]].copy()
 
-    saines = pd.read_csv(SAINES_META, dtype={"siren": str})
+    saines = pd.concat([pd.read_csv(SAINES_META, dtype={"siren": str}),pd.read_csv(ROOT / "data" / "saines_400_enrichi.csv", dtype={"siren": str})], ignore_index=True)
     saines_meta = saines[["siren", "tranche_effectif", "activite_principale", "categorie", "departement"]].copy()
 
     return pd.concat([bodacc_meta, saines_meta], ignore_index=True).drop_duplicates("siren")
