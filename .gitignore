@@ -46,3 +46,4 @@ vigilasso_app_dump.txt
 vigilasso_features.py
 vigilasso_model.py
 app/assets/fichiers_internes/
+app/assets/fichiers_internes/data/html_cache/
