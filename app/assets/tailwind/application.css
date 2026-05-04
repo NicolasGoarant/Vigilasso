@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+@source "../../views/**/*.{erb,html}";
+@source "../../helpers/**/*.rb";
+@source "../../components/**/*.{erb,html,rb}";
+@source "../../javascript/**/*.js";

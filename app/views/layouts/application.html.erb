@@ -8,6 +8,7 @@
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "tailwind", "application", media: "all" %>
     <%= javascript_importmap_tags %>
+    <%= yield :head %>
   </head>
   <body class="bg-slate-50 text-slate-800 min-h-screen">
 

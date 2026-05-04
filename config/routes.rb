@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  root "associations#index"
+  root "pages#home"
   resources :associations, only: [:index, :show, :new, :create, :update, :destroy] do
     member do
       post :relancer_extraction
