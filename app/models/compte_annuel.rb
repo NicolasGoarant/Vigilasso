@@ -1,0 +1,2 @@
+class CompteAnnuel < ApplicationRecord
+end

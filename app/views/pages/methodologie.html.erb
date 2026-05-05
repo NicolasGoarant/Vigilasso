@@ -1,0 +1,249 @@
+<% content_for :head do %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .font-display { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; }
+    .font-body    { font-family: 'Source Sans 3', system-ui, sans-serif; }
+    .step-num {
+      font-family: 'Fraunces', Georgia, serif;
+      font-feature-settings: "lnum";
+    }
+  </style>
+<% end %>
+
+<div class="font-body -mx-6 -my-6 text-[16px] text-slate-800">
+
+  <%# ===== HEADER ===== %>
+  <section class="bg-slate-900 text-white">
+    <div class="max-w-5xl mx-auto px-6 pt-16 pb-14">
+      <div class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-200 bg-indigo-900/40 border border-indigo-400/30 px-3 py-1.5 rounded-full mb-6 tracking-wide uppercase">
+        Méthodologie · Validation externe
+      </div>
+      <h1 class="font-display text-4xl md:text-5xl font-medium leading-[1.1] tracking-tight mb-5">
+        Comment Vigil'Asso a été validé contre une source <em class="text-indigo-300 italic font-normal">externe</em>.
+      </h1>
+      <p class="text-lg text-slate-300 max-w-3xl leading-relaxed">
+        162 rapports des chambres régionales et de la Cour des comptes ont servi de vérité terrain pour mesurer la qualité du score sur <%= @sample_size %> cas exploitables. Ce document décrit le protocole, expose les chiffres bruts, et liste les limites.
+      </p>
+    </div>
+  </section>
+
+  <%# ===== SECTION 1 — PROTOCOLE ===== %>
+  <section class="max-w-5xl mx-auto px-6 pt-16">
+    <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Le protocole en quatre étapes</h2>
+    <p class="text-slate-600 mb-10 max-w-3xl">
+      Chaque étape produit un CSV versionné. Les scripts sont reprenables : relancer un script ne refait pas le travail déjà fait.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-5">
+      <%# Étape 1 %>
+      <div class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="step-num text-3xl font-medium text-indigo-600">01</span>
+          <h3 class="font-semibold text-slate-900">Scraping des rapports CRC</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+          Le sitemap public de <code class="text-xs bg-slate-100 px-1 rounded">ccomptes.fr</code> est parcouru, les pages des publications sont extraites, on filtre sur les rapports portant explicitement sur une association loi 1901 (mention juridique vérifiée dans le corps du texte).
+        </p>
+        <dl class="text-xs space-y-1 text-slate-500">
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">Sortie</dt><dd><code>data/reports.csv</code> — 162 rapports</dd></div>
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">PDFs</dt><dd><code>scripts/crc_validator.rb pdfs</code> télécharge les fichiers</dd></div>
+        </dl>
+      </div>
+
+      <%# Étape 2 %>
+      <div class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="step-num text-3xl font-medium text-indigo-600">02</span>
+          <h3 class="font-semibold text-slate-900">Identification SIREN</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+          Pour chaque rapport, requête sur l'API officielle SIRENE filtrée sur les natures juridiques associatives (codes 92xx/93xx). Les cinq meilleurs candidats sont arbitrés par <strong>Claude Haiku 4.5</strong>, qui peut répondre <em>« aucun »</em> — meilleur qu'un faux positif. 116 SIREN identifiés en confiance haute ou moyenne.
+        </p>
+        <dl class="text-xs space-y-1 text-slate-500">
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">Script</dt><dd><code>scripts/crc_validator.rb verify</code></dd></div>
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">Sortie</dt><dd><code>data/sirens_verified.csv</code></dd></div>
+        </dl>
+      </div>
+
+      <%# Étape 3 %>
+      <div class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="step-num text-3xl font-medium text-indigo-600">03</span>
+          <h3 class="font-semibold text-slate-900">Audit qualitatif des conclusions</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+          Chaque rapport est lu par Haiku 4.5 qui catégorise le sujet principal — fragilité financière, gouvernance, conformité, performance, stratégie, ou rien de critique. La vérité terrain est binaire : <code class="text-xs bg-slate-100 px-1 rounded">primary == "fragilite_financiere"</code> → <strong>fragile</strong> ; <code class="text-xs bg-slate-100 px-1 rounded">primary == "rien_critique"</code> → <strong>sain</strong>. Les autres rapports sont écartés.
+        </p>
+        <dl class="text-xs space-y-1 text-slate-500">
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">Script</dt><dd><code>scripts/audit_pdfs.rb all</code></dd></div>
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">Sortie</dt><dd><code>data/audit_pdfs.csv</code></dd></div>
+        </dl>
+      </div>
+
+      <%# Étape 4 %>
+      <div class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-3">
+          <span class="step-num text-3xl font-medium text-indigo-600">04</span>
+          <h3 class="font-semibold text-slate-900">Scoring Vigil'Asso et comparaison</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">
+          Les comptes annuels JOAFE de chaque SIREN sont récupérés en deux temps : exercice <strong>le plus récent</strong> (ce que Vigil'Asso scorerait aujourd'hui) et exercice <strong>contemporain</strong> du rapport CRC. Extraction par Sonnet 4.5, scoring par <code class="text-xs bg-slate-100 px-1 rounded">ScoringService</code>, puis comparaison au label CRC. <%= @sample_size %> cas exploitables après élimination des SIREN sans PDF JOAFE disponible.
+        </p>
+        <dl class="text-xs space-y-1 text-slate-500">
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">Script</dt><dd><code>scripts/phase4_run.rb</code></dd></div>
+          <div class="flex gap-2"><dt class="font-medium text-slate-700 w-24 shrink-0">Sortie</dt><dd><code>data/phase4_results.csv</code></dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <%# ===== SECTION 2 — SOURCES ===== %>
+  <section class="max-w-5xl mx-auto px-6 pt-20">
+    <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Sources</h2>
+    <p class="text-slate-600 mb-8 max-w-3xl">
+      Toutes les sources sont publiques et l'ensemble du protocole est reproductible.
+    </p>
+
+    <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+      <div class="p-5 flex items-start gap-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide w-32 shrink-0 pt-0.5">Vérité terrain</div>
+        <div class="flex-1">
+          <a href="https://www.ccomptes.fr/fr/publications" target="_blank" rel="noopener" class="text-sm font-medium text-indigo-700 hover:text-indigo-900">ccomptes.fr/fr/publications</a>
+          <p class="text-sm text-slate-600 mt-1">Rapports d'observations définitives de la Cour des comptes et des chambres régionales et territoriales.</p>
+        </div>
+      </div>
+      <div class="p-5 flex items-start gap-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide w-32 shrink-0 pt-0.5">Référentiel SIREN</div>
+        <div class="flex-1">
+          <a href="https://recherche-entreprises.api.gouv.fr/" target="_blank" rel="noopener" class="text-sm font-medium text-indigo-700 hover:text-indigo-900">recherche-entreprises.api.gouv.fr</a>
+          <p class="text-sm text-slate-600 mt-1">API officielle DINUM. Filtrage sur les natures juridiques associatives (9220–9300).</p>
+        </div>
+      </div>
+      <div class="p-5 flex items-start gap-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide w-32 shrink-0 pt-0.5">Comptes annuels</div>
+        <div class="flex-1">
+          <a href="https://www.journal-officiel.gouv.fr/pages/associations-comptes-annuels/" target="_blank" rel="noopener" class="text-sm font-medium text-indigo-700 hover:text-indigo-900">journal-officiel.gouv.fr</a>
+          <p class="text-sm text-slate-600 mt-1">JOAFE — dépôt obligatoire des comptes annuels pour les associations recevant plus de 153 000 € de fonds publics.</p>
+        </div>
+      </div>
+      <div class="p-5 flex items-start gap-4">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide w-32 shrink-0 pt-0.5">Modèles IA</div>
+        <div class="flex-1">
+          <a href="https://www.anthropic.com/claude" target="_blank" rel="noopener" class="text-sm font-medium text-indigo-700 hover:text-indigo-900">Anthropic Claude</a>
+          <p class="text-sm text-slate-600 mt-1">Haiku 4.5 — arbitrage SIREN (étape 2) et audit qualitatif des conclusions CRC (étape 3). Sonnet 4.5 — extraction des données financières des PDFs JOAFE (étape 4).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ===== SECTION 3 — RÉSULTATS ===== %>
+  <section class="max-w-5xl mx-auto px-6 pt-20">
+    <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Résultats</h2>
+    <p class="text-slate-600 mb-8 max-w-3xl leading-relaxed">
+      Sur n=<%= @sample_size %>, les intervalles de confiance à 95 % sur la précision et le rappel sont d'environ <strong>±15 points</strong>. Les chiffres ci-dessous indiquent une tendance, pas un engagement de performance. Deux seuils d'alerte sont mesurés.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-5 mb-8">
+      <%= render "confusion_matrix",
+                 m:            @matrices[:recent_cde],
+                 title:        "Seuil d'alerte — recommandé",
+                 subtitle:     "Vigil'Asso prédit « fragile » si le niveau est C, D ou E.",
+                 accent_label: "C / D / E" %>
+
+      <%= render "confusion_matrix",
+                 m:            @matrices[:recent_de],
+                 title:        "Seuil d'alerte forte — conservateur",
+                 subtitle:     "Vigil'Asso prédit « fragile » uniquement si le niveau est D ou E.",
+                 accent_label: "D / E" %>
+    </div>
+
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6">
+      <div class="text-sm font-semibold text-slate-900 mb-2">Comment lire ces deux matrices ?</div>
+      <p class="text-sm text-slate-600 leading-relaxed mb-3">
+        Le <strong>seuil d'alerte</strong> (C/D/E) est calibré pour le rappel : on rate très peu d'associations fragiles, au prix d'environ <%= @matrices[:recent_cde][:tp] + @matrices[:recent_cde][:fp] > 0 ? "#{(100 - (@matrices[:recent_cde][:precision] * 100).round)} %" : "—" %> de faux positifs sur les sains. C'est le réglage adapté à un usage de signalement précoce — la vérification humaine reste systématique.
+      </p>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Le <strong>seuil d'alerte forte</strong> (D/E) est calibré pour la précision : presque toute alerte forte est justifiée, mais le rappel chute fortement — on ne capte qu'environ <%= (@matrices[:recent_de][:recall] * 100).round %> % des cas réellement fragiles. À réserver aux décisions à fort enjeu.
+      </p>
+    </div>
+  </section>
+
+  <%# ===== SECTION 4 — LIMITES ===== %>
+  <section class="max-w-5xl mx-auto px-6 pt-20 pb-20">
+    <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Limites honnêtes</h2>
+    <p class="text-slate-600 mb-8 max-w-3xl">
+      Cinq points qui doivent être connus avant d'utiliser ces chiffres pour décider.
+    </p>
+
+    <ol class="space-y-5">
+      <li class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="step-num text-2xl text-slate-400 font-medium">01</span>
+          <h3 class="font-semibold text-slate-900">Taille d'échantillon limitée</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          n=<%= @sample_size %> donne un intervalle de confiance à 95 % d'environ ±15 points sur la précision et le rappel. Les chiffres présentés sont des indicateurs de tendance, pas une garantie statistique. Un test indépendant à n ≥ 200 reste à faire pour parler de validation au sens strict.
+        </p>
+      </li>
+      <li class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="step-num text-2xl text-slate-400 font-medium">02</span>
+          <h3 class="font-semibold text-slate-900">Vérité terrain construite, pas juridique</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Le label « fragile » ne désigne pas une faillite mais le verdict d'un audit Haiku 4.5 des conclusions CRC. C'est cohérent avec ce que Vigil'Asso cherche à détecter — une alerte précoce, pas un constat post-mortem — mais ça reste une étiquette construite, dépendante du prompt de classification et de la qualité de la synthèse rendue par le modèle. Les biais éventuels du classifieur s'incrustent ici.
+        </p>
+      </li>
+      <li class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="step-num text-2xl text-slate-400 font-medium">03</span>
+          <h3 class="font-semibold text-slate-900">Biais de sélection amont</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Les CRC ne contrôlent que des associations recevant plus de 153 000 € de fonds publics — donc plutôt grosses, déjà sous regard public, et avec une comptabilité formalisée. La performance mesurée ici ne se transpose pas mécaniquement au segment des associations plus modestes, qui constitue pourtant une cible importante du produit. Le biais joue probablement dans le sens d'une <em>sur</em>-estimation de la qualité du scoring sur le segment > 1 M€.
+        </p>
+      </li>
+      <li class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="step-num text-2xl text-slate-400 font-medium">04</span>
+          <h3 class="font-semibold text-slate-900">Indépendance partielle de la validation</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+          Les seuils du <code class="text-xs bg-slate-100 px-1 rounded">ScoringService</code> (rentabilité, solidité, liquidité…) ont été calibrés en amont par analyse manuelle de cas similaires. La validation CRC confirme que le calibrage n'est pas absurde — elle ne constitue pas un test out-of-distribution strict. Pour cela, il faudrait un échantillon collecté indépendamment, sans recouvrement avec les cas ayant servi à fixer les seuils.
+        </p>
+      </li>
+      <li class="bg-white border border-slate-200 rounded-xl p-6">
+        <div class="flex items-baseline gap-3 mb-2">
+          <span class="step-num text-2xl text-slate-400 font-medium">05</span>
+          <h3 class="font-semibold text-slate-900">Effet temporel — mesuré, et faible</h3>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed mb-3">
+          Les rapports CRC examinent fréquemment des exercices vieux de deux à quatre ans, alors que Vigil'Asso score les comptes <em>les plus récents</em> disponibles sur le JOAFE. On a donc calculé deux scores par SIREN : <code class="text-xs bg-slate-100 px-1 rounded">score_recent</code> sur les comptes actuels (le cas d'usage réel) et <code class="text-xs bg-slate-100 px-1 rounded">score_contemp</code> sur les comptes contemporains du rapport CRC. L'écart entre les deux mesure la stabilité temporelle du signal.
+        </p>
+        <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+          <div>
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Seuil C/D/E (recent − contemp)</div>
+            <div class="text-sm space-y-1 text-slate-700">
+              <div>Précision : <span class="font-mono"><%= "%+.1f" % @temporal_delta_cde[:precision] %> pt</span></div>
+              <div>Rappel : <span class="font-mono"><%= "%+.1f" % @temporal_delta_cde[:recall] %> pt</span></div>
+              <div>F1 : <span class="font-mono"><%= "%+.1f" % @temporal_delta_cde[:f1] %> pt</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Seuil D/E (recent − contemp)</div>
+            <div class="text-sm space-y-1 text-slate-700">
+              <div>Précision : <span class="font-mono"><%= "%+.1f" % @temporal_delta_de[:precision] %> pt</span></div>
+              <div>Rappel : <span class="font-mono"><%= "%+.1f" % @temporal_delta_de[:recall] %> pt</span></div>
+              <div>F1 : <span class="font-mono"><%= "%+.1f" % @temporal_delta_de[:f1] %> pt</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed mt-4">
+          Les écarts restent dans la même magnitude que le bruit d'échantillonnage. Conclusion : sur ce sample, l'âge du rapport CRC ne biaise pas significativement la validation, et le scoring Vigil'Asso est suffisamment stable d'un exercice à l'autre pour qu'on puisse comparer un rapport ancien à un score actuel. C'est un résultat indépendamment intéressant.
+        </p>
+      </li>
+    </ol>
+  </section>
+</div>

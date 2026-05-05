@@ -1,0 +1,72 @@
+<%#
+  locals: m (hash retourné par PagesController#confusion), title, subtitle, accent_label
+  Rend une matrice 2×2 en SVG inline + précision/rappel/F1 en dessous.
+%>
+<% max_count   = [m[:tp], m[:fp], m[:fn], m[:tn]].max.to_f %>
+<% row_fragile = m[:tp] + m[:fn] %>
+<% row_sain    = m[:fp] + m[:tn] %>
+<% cell_fill = ->(count, kind) {
+  base = (kind == :good) ? "26,122,74" : "192,57,43" # vert / rouge palette ScoringService::NIVEAUX
+  opacity = max_count.positive? ? (0.25 + 0.65 * count / max_count).round(2) : 0.25
+  "rgba(#{base}, #{opacity})"
+} %>
+<% pct = ->(n, total) { total.positive? ? "#{(100.0 * n / total).round}%" : "—" } %>
+
+<div class="bg-white border border-slate-200 rounded-xl p-6">
+  <div class="mb-1 text-base font-semibold text-slate-900"><%= title %></div>
+  <div class="mb-5 text-xs text-slate-500"><%= subtitle %></div>
+
+  <svg viewBox="0 0 340 290" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Matrice de confusion <%= title %>">
+    <text x="170" y="20" font-size="12" fill="#475569" text-anchor="middle" font-family="ui-sans-serif, system-ui">Prédit fragile (<%= accent_label %>)</text>
+    <text x="280" y="20" font-size="12" fill="#475569" text-anchor="middle" font-family="ui-sans-serif, system-ui">Prédit sain</text>
+
+    <text x="105" y="95" font-size="12" fill="#475569" text-anchor="end" font-family="ui-sans-serif, system-ui">Réel fragile</text>
+    <text x="105" y="110" font-size="10" fill="#94a3b8" text-anchor="end" font-family="ui-sans-serif, system-ui">(n=<%= row_fragile %>)</text>
+    <text x="105" y="200" font-size="12" fill="#475569" text-anchor="end" font-family="ui-sans-serif, system-ui">Réel sain</text>
+    <text x="105" y="215" font-size="10" fill="#94a3b8" text-anchor="end" font-family="ui-sans-serif, system-ui">(n=<%= row_sain %>)</text>
+
+    <%# TP — fragile prédit fragile %>
+    <rect x="115" y="40" width="110" height="100" fill="<%= cell_fill.call(m[:tp], :good) %>" stroke="#fff" stroke-width="2"/>
+    <text x="170" y="85"  font-size="32" font-weight="700" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= m[:tp] %></text>
+    <text x="170" y="110" font-size="11" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= pct.call(m[:tp], row_fragile) %> des fragiles</text>
+    <text x="170" y="128" font-size="10" fill="#e2e8f0" text-anchor="middle" font-family="ui-sans-serif, system-ui">vrais positifs</text>
+
+    <%# FN — fragile prédit sain %>
+    <rect x="225" y="40" width="110" height="100" fill="<%= cell_fill.call(m[:fn], :bad) %>" stroke="#fff" stroke-width="2"/>
+    <text x="280" y="85"  font-size="32" font-weight="700" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= m[:fn] %></text>
+    <text x="280" y="110" font-size="11" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= pct.call(m[:fn], row_fragile) %> des fragiles</text>
+    <text x="280" y="128" font-size="10" fill="#fee2e2" text-anchor="middle" font-family="ui-sans-serif, system-ui">faux négatifs</text>
+
+    <%# FP — sain prédit fragile %>
+    <rect x="115" y="145" width="110" height="100" fill="<%= cell_fill.call(m[:fp], :bad) %>" stroke="#fff" stroke-width="2"/>
+    <text x="170" y="190" font-size="32" font-weight="700" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= m[:fp] %></text>
+    <text x="170" y="215" font-size="11" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= pct.call(m[:fp], row_sain) %> des sains</text>
+    <text x="170" y="233" font-size="10" fill="#fee2e2" text-anchor="middle" font-family="ui-sans-serif, system-ui">faux positifs</text>
+
+    <%# TN — sain prédit sain %>
+    <rect x="225" y="145" width="110" height="100" fill="<%= cell_fill.call(m[:tn], :good) %>" stroke="#fff" stroke-width="2"/>
+    <text x="280" y="190" font-size="32" font-weight="700" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= m[:tn] %></text>
+    <text x="280" y="215" font-size="11" fill="#fff" text-anchor="middle" font-family="ui-sans-serif, system-ui"><%= pct.call(m[:tn], row_sain) %> des sains</text>
+    <text x="280" y="233" font-size="10" fill="#e2e8f0" text-anchor="middle" font-family="ui-sans-serif, system-ui">vrais négatifs</text>
+
+    <text x="170" y="275" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="ui-sans-serif, system-ui">n total = <%= m[:total] %><% if m[:skipped].positive? %> · <%= m[:skipped] %> exclus (extraction échouée)<% end %></text>
+  </svg>
+
+  <div class="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-slate-100">
+    <div class="text-center">
+      <div class="text-xs text-slate-500 uppercase tracking-wide mb-1">Précision</div>
+      <div class="text-2xl font-semibold text-slate-900"><%= (m[:precision] * 100).round %>%</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">TP / (TP+FP)</div>
+    </div>
+    <div class="text-center">
+      <div class="text-xs text-slate-500 uppercase tracking-wide mb-1">Rappel</div>
+      <div class="text-2xl font-semibold text-slate-900"><%= (m[:recall] * 100).round %>%</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">TP / (TP+FN)</div>
+    </div>
+    <div class="text-center">
+      <div class="text-xs text-slate-500 uppercase tracking-wide mb-1">F1</div>
+      <div class="text-2xl font-semibold text-slate-900"><%= (m[:f1] * 100).round %>%</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">moyenne harmonique</div>
+    </div>
+  </div>
+</div>
