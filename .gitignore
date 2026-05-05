@@ -45,5 +45,10 @@ data/scoring_logs_saines/
 vigilasso_app_dump.txt
 vigilasso_features.py
 vigilasso_model.py
-app/assets/fichiers_internes/
-app/assets/fichiers_internes/data/html_cache/
+# Données du pipeline CRC : on whiteliste les CSV (résultats agrégés,
+# nécessaires à /methodologie et aux scripts d'analyse), on garde les
+# dossiers binaires (PDFs CRC, cache HTML) ignorés.
+app/assets/fichiers_internes/*
+!app/assets/fichiers_internes/data/
+app/assets/fichiers_internes/data/*
+!app/assets/fichiers_internes/data/*.csv
