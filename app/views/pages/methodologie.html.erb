@@ -21,10 +21,10 @@
         Méthodologie · Validation externe
       </div>
       <h1 class="font-display text-4xl md:text-5xl font-medium leading-[1.1] tracking-tight mb-5">
-        Comment Vigil'Asso a été validé contre une source <em class="text-indigo-300 italic font-normal">externe</em>.
+        Comment Vigil'Asso a été calibré et validé contre des sources <em class="text-indigo-300 italic font-normal">externes</em>.
       </h1>
       <p class="text-lg text-slate-300 max-w-3xl leading-relaxed">
-        162 rapports des chambres régionales et de la Cour des comptes ont servi de vérité terrain pour mesurer la qualité du score sur <%= @sample_size %> cas exploitables. Ce document décrit le protocole, expose les chiffres bruts, et liste les limites.
+        Le scoring s'appuie sur un dataset de <strong class="text-white">107 associations effectivement défaillantes</strong> publiées au BODACC (procédures collectives) et a été validé indépendamment contre <strong class="text-white">162 rapports</strong> des chambres régionales et de la Cour des comptes — soit <%= @sample_size %> cas exploitables après extraction des comptes JOAFE. Ce document décrit le protocole de validation, expose les chiffres bruts, et liste les limites.
       </p>
     </div>
   </section>
@@ -138,6 +138,54 @@
     </div>
   </section>
 
+  <%# ===== SECTION 2bis — DATASET D'ENTRAÎNEMENT ===== %>
+  <section class="max-w-5xl mx-auto px-6 pt-20">
+    <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Le dataset d'entraînement</h2>
+    <p class="text-slate-600 mb-8 max-w-3xl leading-relaxed">
+      Le calibrage des seuils du scoring s'appuie sur les comptes annuels JOAFE de <strong class="text-slate-900">107 associations effectivement défaillantes</strong> identifiées dans le BODACC (procédures collectives), confrontés à un échantillon équilibré d'associations saines tirées du JOAFE. Le sample a été élargi en deux temps (sample initial 64 SIREN puis ajout BODACC stratifié 2022–2026 portant le total à 107) et un filtrage temporel des comptes <em>pré-défaillance</em> a été adopté pour resserrer le signal.
+    </p>
+
+    <div class="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+      <div class="flex items-baseline gap-3 mb-3">
+        <h3 class="font-semibold text-slate-900">Filtrage temporel adopté</h3>
+        <span class="text-xs text-slate-500">(version courante — v9)</span>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Les associations en procédure collective ont parfois jusqu'à <em>15 ans</em> de comptes annuels indexés au JOAFE — la majorité de ces exercices sont antérieurs à la défaillance et ne portent pas de signal « pré-défaillance ». Le dataset retenu ne conserve, côté défaillantes, que les comptes clôturés au plus <strong>3 ans avant le jugement d'ouverture</strong>. Ce filtre améliore l'AUC du modèle de référence d'environ <strong>+0.05 à +0.10 points</strong> selon le pipeline (cf. tableau ci-dessous), sans dégrader le rappel.
+      </p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <div class="text-base font-semibold text-slate-900">Effet du filtrage temporel sur un Random Forest de référence</div>
+        <div class="text-xs text-slate-500 mt-1">Modèle de validation interne (n_estimators=300, max_depth=6) — le scoring de production reste piloté par les seuils du <code class="text-[11px] bg-slate-100 px-1 rounded">ScoringService</code>, inchangés.</div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            <tr>
+              <th class="px-5 py-3 text-left">Pipeline</th>
+              <th class="px-5 py-3 text-right">AUC test v6</th>
+              <th class="px-5 py-3 text-right">AUC test v9-filtré</th>
+              <th class="px-5 py-3 text-right">F1 v6</th>
+              <th class="px-5 py-3 text-right">F1 v9-filtré</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tr><td class="px-5 py-2.5 font-medium">Ratios financiers seuls</td><td class="px-5 py-2.5 text-right font-mono">0.732</td><td class="px-5 py-2.5 text-right font-mono text-emerald-700">0.832</td><td class="px-5 py-2.5 text-right font-mono">0.67</td><td class="px-5 py-2.5 text-right font-mono text-emerald-700">0.71</td></tr>
+            <tr><td class="px-5 py-2.5 font-medium">+ effectif estimé</td><td class="px-5 py-2.5 text-right font-mono">0.753</td><td class="px-5 py-2.5 text-right font-mono text-emerald-700">0.814</td><td class="px-5 py-2.5 text-right font-mono">0.65</td><td class="px-5 py-2.5 text-right font-mono text-emerald-700">0.74</td></tr>
+            <tr><td class="px-5 py-2.5 font-medium">+ secteur APE</td><td class="px-5 py-2.5 text-right font-mono">0.803</td><td class="px-5 py-2.5 text-right font-mono text-emerald-700">0.850</td><td class="px-5 py-2.5 text-right font-mono">0.71</td><td class="px-5 py-2.5 text-right font-mono text-emerald-700">0.76</td></tr>
+            <tr><td class="px-5 py-2.5 font-medium">+ ratios relatifs au secteur</td><td class="px-5 py-2.5 text-right font-mono">0.779</td><td class="px-5 py-2.5 text-right font-mono">0.798</td><td class="px-5 py-2.5 text-right font-mono">0.76</td><td class="px-5 py-2.5 text-right font-mono">0.73</td></tr>
+            <tr><td class="px-5 py-2.5 font-medium">Pipeline complet</td><td class="px-5 py-2.5 text-right font-mono">0.805</td><td class="px-5 py-2.5 text-right font-mono">0.807</td><td class="px-5 py-2.5 text-right font-mono">0.76</td><td class="px-5 py-2.5 text-right font-mono text-emerald-700">0.78</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-500">
+        Lecture : le gain est concentré sur les pipelines comptables purs (FINANCIER, +EFFECTIF, +APE) où le filtrage évite que le modèle apprenne sur des comptes trop éloignés de la défaillance. Sur les pipelines à ratios relatifs, l'effet est neutre — le sectoriel jouait déjà un rôle de cadrage. AUC issus d'un test set n=50, σ ≈ 0.07 — gains tangents à la limite de significativité, jugés crédibles par cohérence inter-pipelines.
+      </div>
+    </div>
+  </section>
+
   <%# ===== SECTION 3 — RÉSULTATS ===== %>
   <section class="max-w-5xl mx-auto px-6 pt-20">
     <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Résultats</h2>
@@ -166,6 +214,26 @@
       </p>
       <p class="text-sm text-slate-600 leading-relaxed">
         Le <strong>seuil d'alerte forte</strong> (D/E) est calibré pour la précision : presque toute alerte forte est justifiée, mais le rappel chute fortement — on ne capte qu'environ <%= (@matrices[:recent_de][:recall] * 100).round %> % des cas réellement fragiles. À réserver aux décisions à fort enjeu.
+      </p>
+    </div>
+  </section>
+
+  <%# ===== SECTION 3bis — PISTES TESTÉES ET ÉCARTÉES ===== %>
+  <section class="max-w-5xl mx-auto px-6 pt-20">
+    <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Pistes testées et écartées</h2>
+    <p class="text-slate-600 mb-6 max-w-3xl leading-relaxed">
+      Tout n'a pas marché. La transparence sur les pistes <em>infructueuses</em> compte autant que sur celles qui ont fonctionné.
+    </p>
+    <div class="bg-white border border-slate-200 rounded-xl p-6">
+      <div class="flex items-baseline gap-3 mb-3">
+        <h3 class="font-semibold text-slate-900">Quatre features non-comptables, écartées après évaluation</h3>
+        <span class="text-xs text-slate-500">(test étape v10)</span>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        Quatre features non-comptables ont été testées par ré-extraction Sonnet 4.5 enrichie sur 380 PDFs : qualité de la certification CAC (sans réserve, avec réserve, refus, alerte continuité d'exploitation), concentration des financeurs publics, évolution pluriannuelle des subventions, évolution pluriannuelle du résultat net. Résultat : <strong class="text-slate-900">pas de gain au-delà du bruit statistique</strong> (Δ AUC ≤ 0.015 sur 6 pipelines RF comparés à dataset équivalent). Diagnostic : ces features sont redondantes avec les ratios financiers déjà utilisés. Le scoring purement comptable suffit pour le périmètre actuel.
+      </p>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Constat secondaire : la qualité de la certification CAC est dominée à 91 % par la modalité « certifié sans réserve » sur ce sample, ce qui revient pratiquement au booléen <code class="text-[11px] bg-slate-100 px-1 rounded">cac_certifie</code> déjà capté ; et le détail nominatif des financeurs publics n'est présent que dans 32 % des annexes — trop sparse pour porter un signal robuste.
       </p>
     </div>
   </section>
