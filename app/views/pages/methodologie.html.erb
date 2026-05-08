@@ -268,6 +268,22 @@
         Détail complet (composition des 74 SIREN par primary CRC, 46 SIREN scorés en analyse exploratoire, croisement audit_primary × niveau Vigil'Asso) dans <code class="text-[11px] bg-slate-100 px-1 rounded">ml/CRC_VALIDATION_v2.md</code>. <code class="text-[11px] bg-slate-100 px-1 rounded">phase4_results.csv</code> original intact.
       </p>
     </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl p-6 mt-5">
+      <div class="flex items-baseline gap-3 mb-3">
+        <h3 class="font-semibold text-slate-900">Analyse des faux positifs</h3>
+        <span class="text-xs text-slate-500">(test étape FP v1)</span>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        Une analyse des <strong class="text-slate-900">10 faux positifs CRC</strong> (Vigil'Asso classe en C/D/E une association que la CRC conclut saine) révèle trois causes : <strong class="text-slate-900">50 %</strong> relèvent de fonds dédiés ou ressources affectées qui font apparaître la trésorerie comme tendue alors qu'elle est juste affectée à un usage spécifique, <strong class="text-slate-900">40 %</strong> concernent des profils sectoriels atypiques (fondations très liquides, structures à modèle économique particulier) que le scoring pénalise, <strong class="text-slate-900">10 %</strong> une volatilité conjoncturelle.
+      </p>
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        <strong class="text-slate-900">Aucune règle de désalerte automatisable n'a pu être définie</strong> sans dégrader significativement le rappel — les sous-scores des faux positifs et des vrais positifs en zone C sont indistinguables avec les 18 indicateurs actuels. Une amélioration future passerait par l'extraction explicite du ratio fonds dédiés/fonds propres et du profil sectoriel — pistes documentées pour une éventuelle v12.
+      </p>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Détail complet (catégorisation Haiku 4.5 cas par cas, deux règles testées avec impact mesuré sur précision et rappel) dans <code class="text-[11px] bg-slate-100 px-1 rounded">ml/FP_ANALYSIS_v1.md</code>. Aucune modification de <code class="text-[11px] bg-slate-100 px-1 rounded">ScoringService</code>.
+      </p>
+    </div>
   </section>
 
   <%# ===== SECTION 3ter — VALIDATION PROSPECTIVE EN COURS ===== %>
