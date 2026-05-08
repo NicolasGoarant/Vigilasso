@@ -24,7 +24,7 @@
         Comment Vigil'Asso a été calibré et validé contre des sources <em class="text-indigo-300 italic font-normal">externes</em>.
       </h1>
       <p class="text-lg text-slate-300 max-w-3xl leading-relaxed">
-        Le scoring s'appuie sur un dataset de <strong class="text-white">107 associations effectivement défaillantes</strong> publiées au BODACC (procédures collectives) et a été validé indépendamment contre <strong class="text-white">162 rapports</strong> des chambres régionales et de la Cour des comptes — soit <%= @sample_size %> cas exploitables après extraction des comptes JOAFE. Ce document décrit le protocole de validation, expose les chiffres bruts, et liste les limites.
+        Le scoring s'appuie sur un dataset de <strong class="text-white">184 associations effectivement défaillantes</strong> publiées au BODACC (procédures collectives) et a été validé indépendamment contre <strong class="text-white">162 rapports</strong> des chambres régionales et de la Cour des comptes — soit <%= @sample_size %> cas exploitables après extraction des comptes JOAFE. Ce document décrit le protocole de validation, expose les chiffres bruts, et liste les limites.
       </p>
     </div>
   </section>
@@ -142,7 +142,7 @@
   <section class="max-w-5xl mx-auto px-6 pt-20">
     <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Le dataset d'entraînement</h2>
     <p class="text-slate-600 mb-8 max-w-3xl leading-relaxed">
-      Le calibrage des seuils du scoring s'appuie sur les comptes annuels JOAFE de <strong class="text-slate-900">107 associations effectivement défaillantes</strong> identifiées dans le BODACC (procédures collectives), confrontés à un échantillon équilibré d'associations saines tirées du JOAFE. Le sample a été élargi en deux temps (sample initial 64 SIREN puis ajout BODACC stratifié 2022–2026 portant le total à 107) et un filtrage temporel des comptes <em>pré-défaillance</em> a été adopté pour resserrer le signal.
+      Le calibrage des seuils du scoring s'appuie sur les comptes annuels JOAFE de <strong class="text-slate-900">184 associations effectivement défaillantes</strong> identifiées dans le BODACC (procédures collectives), confrontés à un échantillon équilibré d'associations saines tirées du JOAFE. Le sample a été élargi en trois temps (sample initial 64 SIREN, première extension BODACC stratifié 2022–2026 portant à 107, seconde extension v11 portant à 184) et un filtrage temporel des comptes <em>pré-défaillance</em> a été adopté pour resserrer le signal.
     </p>
 
     <div class="bg-white border border-slate-200 rounded-xl p-6 mb-6">
@@ -224,7 +224,7 @@
     <p class="text-slate-600 mb-6 max-w-3xl leading-relaxed">
       Tout n'a pas marché. La transparence sur les pistes <em>infructueuses</em> compte autant que sur celles qui ont fonctionné.
     </p>
-    <div class="bg-white border border-slate-200 rounded-xl p-6">
+    <div class="bg-white border border-slate-200 rounded-xl p-6 mb-5">
       <div class="flex items-baseline gap-3 mb-3">
         <h3 class="font-semibold text-slate-900">Quatre features non-comptables, écartées après évaluation</h3>
         <span class="text-xs text-slate-500">(test étape v10)</span>
@@ -234,6 +234,38 @@
       </p>
       <p class="text-xs text-slate-500 leading-relaxed">
         Constat secondaire : la qualité de la certification CAC est dominée à 91 % par la modalité « certifié sans réserve » sur ce sample, ce qui revient pratiquement au booléen <code class="text-[11px] bg-slate-100 px-1 rounded">cac_certifie</code> déjà capté ; et le détail nominatif des financeurs publics n'est présent que dans 32 % des annexes — trop sparse pour porter un signal robuste.
+      </p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl p-6">
+      <div class="flex items-baseline gap-3 mb-3">
+        <h3 class="font-semibold text-slate-900">Re-calibration des seuils sur dataset élargi</h3>
+        <span class="text-xs text-slate-500">(test étape v11)</span>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        Le passage à <strong class="text-slate-900">184 défaillances réelles</strong> a permis de relancer un sweep complet des seuils <code class="text-[11px] bg-slate-100 px-1 rounded">T_B</code> et <code class="text-[11px] bg-slate-100 px-1 rounded">T_C</code> sur un sample combiné de <strong class="text-slate-900">n=1523</strong> (38 cas CRC + 1485 BODACC élargi). Résultat : <strong class="text-slate-900">tous les optima du sweep collapsent les deux seuils à 2–4 points l'un de l'autre</strong> (T_B=64–66, T_C=62–64), ce qui efface visuellement le palier <em>C</em> entre B et D — c'est-à-dire que le sweep optimise mathématiquement un classifieur binaire, pas un système 5 niveaux.
+      </p>
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        Décision : <strong class="text-slate-900">maintenir 80 / 60 / 40 / 20</strong>. L'optimum CRC seul reste à (62, 60), à 2 points des seuils actuels. La macro-F1 BODACC aux seuils inchangés a en revanche progressé de 38 % à 56.4 % en passant de v6 à v11 — autrement dit, le système 60/40 fonctionne mieux à mesure qu'on enrichit le sample, sans qu'il ait fallu modifier le code.
+      </p>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Détail complet du sweep, comparaison ligne à ligne v6 → v11, et impact mesuré d'un déplacement T_C : 40 → 60 dans <code class="text-[11px] bg-slate-100 px-1 rounded">ml/CALIBRATION_v11.md</code>. Aucune modification de <code class="text-[11px] bg-slate-100 px-1 rounded">ScoringService</code>.
+      </p>
+    </div>
+  </section>
+
+  <%# ===== SECTION 3ter — VALIDATION PROSPECTIVE EN COURS ===== %>
+  <section class="max-w-5xl mx-auto px-6 pt-20">
+    <h2 class="font-display text-3xl font-medium text-slate-900 mb-2">Validation prospective en cours</h2>
+    <p class="text-slate-600 mb-6 max-w-3xl leading-relaxed">
+      La validation CRC est <em>rétrospective</em> — elle compare le scoring à des rapports déjà publiés. Pour mesurer la performance prédictive réelle, il faut un test <em>prospectif</em> : figer l'état du scoring à un instant T, attendre, mesurer ce qui s'est effectivement passé.
+    </p>
+    <div class="bg-white border border-slate-200 rounded-xl p-6">
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        Un snapshot des <strong class="text-slate-900">121 associations actuellement scorées</strong> par Vigil'Asso a été figé au <strong class="text-slate-900">8 mai 2026</strong> (CSV public dans le dépôt : <code class="text-[11px] bg-slate-100 px-1 rounded">data/snapshot_prospectif_2026-05-08.csv</code>). Dans 12 à 24 mois, ce snapshot sera apparié aux jugements BODACC publiés entre-temps pour mesurer la performance prédictive niveau par niveau (A → E), avec intervalles de confiance binomiaux par classe.
+      </p>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Hypothèse à tester : la probabilité de défaillance dans la fenêtre 12–24 mois croît strictement de A à E. Protocole détaillé et caveats (censure à droite, biais de sélection) dans <code class="text-[11px] bg-slate-100 px-1 rounded">data/README_snapshots.md</code>. Le rapport de mesure paraîtra ensuite sous <code class="text-[11px] bg-slate-100 px-1 rounded">ml/VALIDATION_PROSPECTIVE_&lt;date&gt;.md</code>.
       </p>
     </div>
   </section>
