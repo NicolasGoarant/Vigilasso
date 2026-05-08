@@ -237,7 +237,7 @@
       </p>
     </div>
 
-    <div class="bg-white border border-slate-200 rounded-xl p-6">
+    <div class="bg-white border border-slate-200 rounded-xl p-6 mb-5">
       <div class="flex items-baseline gap-3 mb-3">
         <h3 class="font-semibold text-slate-900">Re-calibration des seuils sur dataset élargi</h3>
         <span class="text-xs text-slate-500">(test étape v11)</span>
@@ -250,6 +250,22 @@
       </p>
       <p class="text-xs text-slate-500 leading-relaxed">
         Détail complet du sweep, comparaison ligne à ligne v6 → v11, et impact mesuré d'un déplacement T_C : 40 → 60 dans <code class="text-[11px] bg-slate-100 px-1 rounded">ml/CALIBRATION_v11.md</code>. Aucune modification de <code class="text-[11px] bg-slate-100 px-1 rounded">ScoringService</code>.
+      </p>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-xl p-6">
+      <div class="flex items-baseline gap-3 mb-3">
+        <h3 class="font-semibold text-slate-900">Tentative d'élargissement du sample CRC</h3>
+        <span class="text-xs text-slate-500">(test étape v2 — mai 2026)</span>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        Sur les 115 SIREN identifiés en phase 2-3, seuls 38 ont été scorés en phase 4. Pour comprendre l'origine du gap, les 74 SIREN « perdus » sans PDF JOAFE local ont été scrapés (taux JOAFE 62 %, 500 PDFs, 0 erreur). Résultat : <strong class="text-slate-900">l'élargissement du sample CRC binaire a été nul</strong>. Sur les 74 SIREN, seulement 9 portent un label binaire (fragile/sain) ; et précisément ces 9 sont ceux pour lesquels aucun PDF JOAFE n'existe — pattern cohérent avec le sample BODACC, où les associations en fragilité financière ont quasi toutes cessé de déposer leurs comptes.
+      </p>
+      <p class="text-sm text-slate-600 leading-relaxed mb-4">
+        Apport méthodologique néanmoins : <strong class="text-slate-900">les intervalles de confiance Wilson 95 %</strong> sur les chiffres affichés ont été calculés et sont désormais visibles directement à côté des matrices ci-dessus. Précision C/D/E 71 % [54–83 %], rappel 96 % [80–99 %].
+      </p>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Détail complet (composition des 74 SIREN par primary CRC, 46 SIREN scorés en analyse exploratoire, croisement audit_primary × niveau Vigil'Asso) dans <code class="text-[11px] bg-slate-100 px-1 rounded">ml/CRC_VALIDATION_v2.md</code>. <code class="text-[11px] bg-slate-100 px-1 rounded">phase4_results.csv</code> original intact.
       </p>
     </div>
   </section>

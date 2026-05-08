@@ -48,8 +48,23 @@ class PagesController < ApplicationController
     {
       tp: tp, fp: fp, fn: fn_, tn: tn,
       total: total, skipped: skipped,
-      precision: precision, recall: recall, f1: f1, accuracy: accuracy
+      precision: precision, recall: recall, f1: f1, accuracy: accuracy,
+      precision_ci: wilson_ci(tp, tp + fp),
+      recall_ci:    wilson_ci(tp, tp + fn_)
     }
+  end
+
+  # Intervalle de confiance binomial Wilson 95 %.
+  # Retourne [borne_basse, borne_haute] dans [0, 1], ou nil si total nul.
+  def wilson_ci(successes, total, z = 1.96)
+    return nil if total.zero?
+    p_hat   = successes.to_f / total
+    denom   = 1.0 + (z**2) / total
+    centre  = p_hat + (z**2) / (2 * total)
+    margin  = z * Math.sqrt((p_hat * (1 - p_hat) + (z**2) / (4 * total)) / total)
+    low     = (centre - margin) / denom
+    high    = (centre + margin) / denom
+    [[low, 0.0].max, [high, 1.0].min]
   end
 
   # Écart en points de pourcentage (recent − contemp), positif = recent meilleur

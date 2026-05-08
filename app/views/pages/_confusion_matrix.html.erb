@@ -56,11 +56,17 @@
     <div class="text-center">
       <div class="text-xs text-slate-500 uppercase tracking-wide mb-1">Précision</div>
       <div class="text-2xl font-semibold text-slate-900"><%= (m[:precision] * 100).round %>%</div>
+      <% if m[:precision_ci] %>
+        <div class="text-[10px] text-slate-500 mt-0.5">IC 95 % [<%= (m[:precision_ci][0] * 100).round %>–<%= (m[:precision_ci][1] * 100).round %>%]</div>
+      <% end %>
       <div class="text-[10px] text-slate-400 mt-0.5">TP / (TP+FP)</div>
     </div>
     <div class="text-center">
       <div class="text-xs text-slate-500 uppercase tracking-wide mb-1">Rappel</div>
       <div class="text-2xl font-semibold text-slate-900"><%= (m[:recall] * 100).round %>%</div>
+      <% if m[:recall_ci] %>
+        <div class="text-[10px] text-slate-500 mt-0.5">IC 95 % [<%= (m[:recall_ci][0] * 100).round %>–<%= (m[:recall_ci][1] * 100).round %>%]</div>
+      <% end %>
       <div class="text-[10px] text-slate-400 mt-0.5">TP / (TP+FN)</div>
     </div>
     <div class="text-center">
