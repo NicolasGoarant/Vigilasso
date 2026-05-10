@@ -24,13 +24,6 @@
 
   <% niveau = @analysis.niveau_vigi || "E" %>
   <% niveau_info = ScoringService.niveau_info(niveau) %>
-  <% commentaires = {
-    "A" => "Indicateurs financiers solides. Aucun signe d'alerte sur les ratios analysés. À reconfirmer chaque année.",
-    "B" => "Situation globalement saine. Quelques points à surveiller, pas de signal critique.",
-    "C" => "Vigilance recommandée. Au moins un indicateur s'écarte des seuils habituels — un dialogue avec l'association peut être opportun.",
-    "D" => "Situation préoccupante. Plusieurs indicateurs montrent des fragilités. Examen approfondi conseillé avant nouvelle décision de financement.",
-    "E" => "Risque élevé. Le profil financier ressemble à celui d'associations ayant connu une défaillance. Ne pas attendre pour prendre contact."
-  } %>
 
   <section class="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 mb-6 shadow-sm">
     <div class="grid md:grid-cols-12 gap-8 items-center">
@@ -43,7 +36,7 @@
           <span class="font-display text-7xl leading-none" style="color: <%= AnalysesHelper::NUTRI_COLORS[niveau] %>;"><%= niveau %></span>
           <span class="text-slate-500 text-sm uppercase tracking-wider"><%= niveau_info[:text] %></span>
         </div>
-        <p class="text-slate-600 leading-relaxed text-base"><%= commentaires[niveau] %></p>
+        <%= analysis_commentary(@analysis).html_safe %>
       </div>
     </div>
   </section>

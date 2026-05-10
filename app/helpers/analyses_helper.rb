@@ -70,4 +70,60 @@ module AnalysesHelper
   SOUS_SCORE_MAX = {
     "rentabilite" => 30, "solidite" => 25, "liquidite" => 20, "autonomie" => 15, "gouvernance" => 10
   }.freeze
+
+  COMMENTARY_LABELS = {
+    "rentabilite" => "la rentabilité",
+    "solidite"    => "la solidité du bilan",
+    "liquidite"   => "la liquidité",
+    "autonomie"   => "l'autonomie financière",
+    "gouvernance" => "la gouvernance"
+  }.freeze
+
+  def analysis_commentary(analysis)
+    niveau = analysis.niveau_vigi || "E"
+    niveau_info = ScoringService.niveau_info(niveau)
+    detail = analysis.score_detail || {}
+
+    scores = SOUS_SCORE_MAX.map do |key, max|
+      val = detail[key].to_f
+      pct = max.zero? ? 0 : (val / max * 100).round
+      { key: key, label: COMMENTARY_LABELS[key], pct: pct }
+    end
+
+    forces     = scores.select { |s| s[:pct] >= 70 }
+    faiblesses = scores.select { |s| s[:pct] < 50 }
+
+    phrase =
+      if scores.all? { |s| s[:pct] >= 70 }
+        "Situation saine sur l'ensemble des dimensions évaluées."
+      elsif forces.empty? && faiblesses.empty?
+        "Profil financier homogène, sans force marquée ni faiblesse critique."
+      elsif faiblesses.empty?
+        "Score porté par #{join_french(forces.map { |s| s[:label] })}. Les autres dimensions restent en zone acceptable."
+      elsif forces.empty?
+        "Plusieurs dimensions sont en deçà des seuils habituels : #{join_french(faiblesses.map { |s| "#{s[:label]} (#{s[:pct]} % du maximum)" })}."
+      elsif forces.size >= faiblesses.size
+        "Score porté par #{join_french(forces.map { |s| s[:label] })}. Points à surveiller : #{join_french(faiblesses.map { |s| "#{s[:label]} (#{s[:pct]} % du maximum)" })}."
+      else
+        forces_str = capitalize_first(join_french(forces.map { |s| s[:label] }))
+        verb = forces.size > 1 ? "restent" : "reste"
+        "Plusieurs dimensions sont en deçà des seuils habituels : #{join_french(faiblesses.map { |s| "#{s[:label]} (#{s[:pct]} % du maximum)" })}. #{forces_str} #{verb} un point d'appui."
+      end
+
+    %(<p class="text-slate-600 leading-relaxed text-base"><strong class="text-slate-800">#{niveau} — #{niveau_info[:text]}</strong><br>#{ERB::Util.html_escape(phrase)}</p>)
+  end
+
+  private
+
+  def join_french(items)
+    return "" if items.empty?
+    return items.first if items.size == 1
+    return items.join(" et ") if items.size == 2
+    "#{items[0..-2].join(', ')} et #{items.last}"
+  end
+
+  def capitalize_first(str)
+    return str if str.empty?
+    str[0].upcase + str[1..]
+  end
 end

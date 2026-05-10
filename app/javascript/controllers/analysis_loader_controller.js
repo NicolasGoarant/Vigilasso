@@ -17,7 +17,9 @@ export default class extends Controller {
     if (!file) return
 
     this.errorTarget.classList.add("hidden")
+    this.formTarget.classList.add("hidden")
     this.overlayTarget.classList.remove("hidden")
+    this.overlayTarget.scrollIntoView({ behavior: "smooth", block: "center" })
     this.submitTarget.disabled = true
 
     const sequence = [
@@ -59,6 +61,7 @@ export default class extends Controller {
     if (errorMsg) {
       this.completeAllSteps()
       this.overlayTarget.classList.add("hidden")
+      this.formTarget.classList.remove("hidden")
       this.submitTarget.disabled = false
       this.errorTarget.textContent = errorMsg
       this.errorTarget.classList.remove("hidden")
