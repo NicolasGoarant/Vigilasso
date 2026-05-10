@@ -36,7 +36,14 @@
           <span class="font-display text-7xl leading-none" style="color: <%= AnalysesHelper::NUTRI_COLORS[niveau] %>;"><%= niveau %></span>
           <span class="text-slate-500 text-sm uppercase tracking-wider"><%= niveau_info[:text] %></span>
         </div>
-        <%= analysis_commentary(@analysis).html_safe %>
+        <% if @analysis.commentary_llm.present? %>
+          <div class="text-slate-600 leading-relaxed text-base space-y-2">
+            <strong class="text-slate-800 block"><%= niveau %> — <%= niveau_info[:text] %></strong>
+            <%= simple_format(@analysis.commentary_llm, {}, sanitize: true) %>
+          </div>
+        <% else %>
+          <%= analysis_commentary(@analysis).html_safe %>
+        <% end %>
       </div>
     </div>
   </section>

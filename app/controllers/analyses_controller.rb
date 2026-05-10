@@ -38,6 +38,8 @@ class AnalysesController < ApplicationController
     )
 
     if analysis.save
+      commentary = LlmCommentaryService.new(analysis).call
+      analysis.update_column(:commentary_llm, commentary) if commentary.present?
       render json: { token: analysis.token, redirect: analyse_path(token: analysis.token) }
     else
       render json: { error: analysis.errors.full_messages.join(", ") }, status: :unprocessable_entity
