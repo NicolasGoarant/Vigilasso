@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_01_170926) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_10_164836) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -40,6 +40,38 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_01_170926) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "analyses", force: :cascade do |t|
+    t.string "token", null: false
+    t.string "siren"
+    t.string "nom"
+    t.string "ville"
+    t.date "cloture"
+    t.bigint "total_produits"
+    t.bigint "resultat_exploitation"
+    t.bigint "resultat_net"
+    t.bigint "fonds_propres"
+    t.bigint "tresorerie"
+    t.bigint "emprunts"
+    t.bigint "total_bilan"
+    t.integer "subv_sur_produits_pct"
+    t.integer "masse_sal_pct"
+    t.integer "fp_bilan_pct"
+    t.decimal "etp", precision: 8, scale: 2
+    t.boolean "cac_certifie", default: false, null: false
+    t.integer "statut"
+    t.text "notes"
+    t.integer "score_vigi"
+    t.string "niveau_vigi", limit: 1
+    t.jsonb "score_detail"
+    t.jsonb "extraction_raw"
+    t.string "email"
+    t.datetime "expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_analyses_on_expires_at"
+    t.index ["token"], name: "index_analyses_on_token", unique: true
   end
 
   create_table "associations", force: :cascade do |t|
@@ -102,6 +134,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_01_170926) do
     t.text "erreur"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.string "name"
+    t.string "organisation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

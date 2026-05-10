@@ -1,0 +1,23 @@
+<div style="font-family: 'Source Sans 3', system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #0f172a;">
+  <div style="border-bottom: 1px solid #e2e8f0; padding: 16px 0; margin-bottom: 24px;">
+    <strong style="font-family: Fraunces, Georgia, serif; font-size: 20px; color: #4338ca;">Vigil'Asso</strong>
+  </div>
+
+  <p>Bonjour,</p>
+  <p>Voici le lien permanent vers votre analyse de <strong><%= @analysis.nom %></strong> :</p>
+
+  <p style="margin: 24px 0;">
+    <a href="<%= @url %>" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Voir l'analyse</a>
+  </p>
+
+  <p style="font-size: 13px; color: #64748b;">Ou copiez ce lien : <%= @url %></p>
+
+  <div style="margin-top: 32px; padding: 16px 20px; background: #f8fafc; border-radius: 8px; font-size: 14px;">
+    <strong>Récapitulatif</strong><br>
+    Association : <%= @analysis.nom %><br>
+    SIREN : <%= @analysis.siren %><br>
+    Score : <%= @analysis.score_vigi %> / 100 — niveau <%= @analysis.niveau_vigi %>
+  </div>
+
+  <p style="margin-top: 24px; font-size: 12px; color: #94a3b8;">— L'équipe Vigil'Asso</p>
+</div>

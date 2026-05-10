@@ -1,4 +1,6 @@
 class AssociationsController < ApplicationController
+  before_action :authenticate_user!
+
   MAX_PDFS = 10
 
   def index

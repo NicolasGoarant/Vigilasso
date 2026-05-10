@@ -45,13 +45,13 @@
         </p>
 
         <div class="flex flex-wrap items-center gap-3">
-          <%= link_to new_association_path, class: "inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3.5 rounded-lg font-semibold hover:bg-slate-100 transition-colors shadow-lg" do %>
+          <%= link_to analyser_path, class: "inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3.5 rounded-lg font-semibold hover:bg-slate-100 transition-colors shadow-lg" do %>
             Tester avec un PDF
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
           <% end %>
-          <a href="#observatoire" class="inline-flex items-center gap-2 text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur border border-white/20">
+          <%= link_to new_user_session_path, class: "inline-flex items-center gap-2 text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur border border-white/20" do %>
             Découvrir l'observatoire
-          </a>
+          <% end %>
         </div>
       </div>
 
@@ -308,7 +308,7 @@
         Une association vous interroge ? Téléversez ses comptes annuels et obtenez en quelques minutes un éclairage financier indépendant.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-3">
-        <%= link_to new_association_path, class: "inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-sm" do %>
+        <%= link_to analyser_path, class: "inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-sm" do %>
           Tester avec un PDF
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
         <% end %>
