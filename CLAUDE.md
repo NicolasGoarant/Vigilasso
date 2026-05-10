@@ -38,6 +38,7 @@ rake extract_financials:run LIMIT=50 RETRY_ERRORS=true
 rake extract_financials:run PDF=779884329_31082022
 rake extract_financials:stats
 rake bodacc:import                           # imports data/scores_positifs.csv + bodacc_*.csv into Association
+rake analyses:purge                          # supprime les Analysis dont expires_at < now (anonymes uniquement)
 ```
 
 ### Research scripts
@@ -110,6 +111,52 @@ They are not interchangeable. `Association` is the user-facing scored record. `C
 - Pour les visualisations de données dans des vues Rails : SVG inline d'abord (zéro dépendance), Chartkick si besoin de quelque chose d'interactif. Pas de framework JS lourd.
 - Tailwind v4 avec safelist — vérifier `app/assets/stylesheets/safelist.txt` avant d'utiliser une utility class non-évidente.
 - Honnêteté méthodologique : ne pas surdimensionner les chiffres ni masquer les limites. Sample n=38 = intervalles de confiance ±15 points, à mentionner systématiquement quand on présente la validation CRC.
+
+## À configurer côté production (pas en local pour l'instant)
+
+Pas de cron ni de scheduler en place dans le repo aujourd'hui. À mettre en place sur le serveur de prod le moment venu :
+
+### 1. Cron quotidien — purge des analyses expirées
+
+`Analysis` (parcours public anonyme) a un `expires_at = now + 24h` par défaut ; les analyses sauvegardées par email passent à `expires_at = nil`. La rake task `analyses:purge` supprime uniquement celles dont `expires_at IS NOT NULL AND expires_at < now`. Pas dangereuse à relancer (idempotente).
+
+À planifier 1×/jour sur le serveur de prod. Au choix :
+
+**Crontab système** (le plus simple) — `crontab -e` sur l'utilisateur qui détient le déploiement :
+```cron
+# Vigil'Asso — purge des analyses anonymes expirées (tous les jours à 03:17 UTC)
+17 3 * * * cd /var/www/vigilasso/current && /usr/bin/env -i HOME=$HOME PATH=/usr/local/bin:/usr/bin:/bin RAILS_ENV=production bundle exec rake analyses:purge >> log/cron.log 2>&1
+```
+
+Ajuster `cd` au chemin de déploiement (Capistrano `current/`, ou autre). `env -i` purge l'environnement pour un comportement reproductible. `bundle exec` est requis (sinon Bundler ne charge pas le Gemfile). Rediriger stdout+stderr vers un log permet de vérifier que ça tourne (`tail -f log/cron.log`).
+
+**systemd timer** (plus moderne, journald natif) — créer `/etc/systemd/system/vigilasso-purge.service` et `.timer`, voir `man systemd.timer`. Avantage : suivi via `systemctl list-timers` + `journalctl -u vigilasso-purge.service`.
+
+**Heroku Scheduler / GitHub Actions cron** — pertinents seulement si l'app est hébergée sur Heroku ou si la base de prod est joignable depuis Internet (avec secrets dans GitHub).
+
+Vérification manuelle avant de planifier :
+```bash
+RAILS_ENV=production bundle exec rake analyses:purge
+# → "Supprimées : N analyses expirées"
+```
+
+### 2. SMTP réel pour AnalysisMailer + Devise reset password
+
+En dev, `letter_opener` ouvre les mails dans le navigateur. En prod, configurer dans `config/environments/production.rb` :
+```ruby
+config.action_mailer.delivery_method = :smtp
+config.action_mailer.default_url_options = { host: "vigilasso.fr", protocol: "https" }
+config.action_mailer.smtp_settings = { address: "smtp.postmark.com", port: 587, ... }
+```
+Puis configurer SPF/DKIM sur le domaine envoyeur (`from: noreply@vigilasso.fr`).
+
+### 3. Comptes collectivités initiaux
+
+`devise_for :users, skip: [:registrations]` — pas de sign-up public. Création manuelle :
+```ruby
+User.create!(email: "vie-asso@grand-est.fr", password: SecureRandom.alphanumeric(12), name: "Prénom Nom", organisation: "Région Grand Est")
+```
+Puis l'utilisateur reçoit son mot de passe initial via le flow `/users/password/new` (qui nécessite SMTP configuré, voir ci-dessus).
 
 ## État courant (mai 2026)
 
