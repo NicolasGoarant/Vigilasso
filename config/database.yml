@@ -80,6 +80,4 @@ test:
 #
 production:
   <<: *default
-  database: vigilasso_production
-  username: vigilasso
-  password: <%= ENV["VIGILASSO_DATABASE_PASSWORD"] %>
+  url: <%= ENV["DATABASE_URL"] %>
