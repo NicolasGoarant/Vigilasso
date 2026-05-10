@@ -117,13 +117,13 @@ class AssociationsController < ApplicationController
       csv << %w[siren nom ville cloture total_produits resultat_exploitation
                 resultat_net fonds_propres tresorerie emprunts total_bilan
                 subv_sur_produits_pct masse_sal_pct fp_bilan_pct etp
-                cac_certifie statut label_vigi notes]
+                cac_certifie statut score_vigi niveau_vigi notes]
       associations.each do |a|
         csv << [a.siren, a.nom, a.ville, a.cloture, a.total_produits,
                 a.resultat_exploitation, a.resultat_net, a.fonds_propres,
                 a.tresorerie, a.emprunts, a.total_bilan, a.subv_sur_produits_pct,
                 a.masse_sal_pct, a.fp_bilan_pct, a.etp, a.cac_certifie,
-                a.statut, a.label_vigi, a.notes]
+                a.statut, a.score_vigi, a.niveau_vigi, a.notes]
       end
     end
     send_data csv, filename: "vigilasso_#{Date.today}.csv", type: "text/csv"
@@ -132,6 +132,6 @@ class AssociationsController < ApplicationController
   private
 
   def association_params
-    params.require(:association).permit(:label_vigi, :notes, :statut)
+    params.require(:association).permit(:notes, :statut)
   end
 end
