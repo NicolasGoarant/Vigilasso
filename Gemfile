@@ -50,7 +50,7 @@ group :development do
 end
 
 
-gem "anthropic", "~> 1.24"
+gem "anthropic", "~> 1.39"
 gem "devise", "~> 4.9"
 
 gem "pagy", "~> 43.4"
