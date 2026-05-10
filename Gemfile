@@ -53,7 +53,7 @@ end
 gem "anthropic", "~> 1.24"
 gem "devise", "~> 4.9"
 
-gem "pagy", "~> 43.4"
+gem "pagy", "~> 43.5"
 
 gem "noticed", "~> 3.0"
 gem "connection_pool", "2.5.5"
