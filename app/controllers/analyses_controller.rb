@@ -47,16 +47,22 @@ class AnalysesController < ApplicationController
   end
 
   def show
-    @analysis = Analysis.find_by!(token: params[:token])
+    @analysis = Analysis.find_by(token: params[:token])
+    if @analysis.nil?
+      redirect_to analyser_path, alert: "Cette analyse n'existe pas ou a expiré. Vous pouvez en lancer une nouvelle." and return
+    end
     if @analysis.expiree?
-      redirect_to analyser_path, alert: "Cette analyse a expiré. Vous pouvez en lancer une nouvelle."
+      redirect_to analyser_path, alert: "Cette analyse a expiré. Vous pouvez en lancer une nouvelle." and return
     end
   end
 
   def save
-    @analysis = Analysis.find_by!(token: params[:token])
-    email = params[:email].to_s.strip.downcase
+    @analysis = Analysis.find_by(token: params[:token])
+    if @analysis.nil?
+      return render json: { error: "Analyse introuvable." }, status: :not_found
+    end
 
+    email = params[:email].to_s.strip.downcase
     if email !~ URI::MailTo::EMAIL_REGEXP
       return render json: { error: "Adresse email invalide." }, status: :unprocessable_entity
     end
@@ -64,7 +70,5 @@ class AnalysesController < ApplicationController
     @analysis.update!(email: email, expires_at: nil)
     AnalysisMailer.save_link(@analysis).deliver_later
     render json: { ok: true, message: "Lien envoyé à #{email}." }
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: "Analyse introuvable." }, status: :not_found
   end
 end
