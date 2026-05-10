@@ -1,6 +1,8 @@
 class Analysis < ApplicationRecord
   enum :statut, { excedent: 0, deficit: 1, ambigu: 2 }
 
+  serialize :commentary_llm, coder: JSON
+
   before_validation :ensure_token, on: :create
   before_validation :ensure_expires_at, on: :create
   before_save :calculer_score
