@@ -1,0 +1,56 @@
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-50" data-controller="navbar">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+
+      <%= link_to root_path, class: "flex items-center gap-2" do %>
+        <span class="bg-indigo-600 text-white p-1.5 rounded-md flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </span>
+        <span class="font-serif text-lg font-bold text-slate-900">Vigil'Asso</span>
+      <% end %>
+
+      <div class="hidden md:flex items-center gap-6">
+        <%= link_to "Méthodologie", methodologie_path, class: "text-sm text-slate-600 hover:text-slate-900 transition" %>
+        <%= link_to "Qui sommes-nous", qui_sommes_nous_path, class: "text-sm text-slate-600 hover:text-slate-900 transition" %>
+        <% if user_signed_in? %>
+          <%= link_to "Tableau de bord", associations_path, class: "text-sm text-slate-600 hover:text-slate-900 transition" %>
+          <%= link_to export_associations_path, class: "inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition" do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Exporter CSV
+          <% end %>
+        <% end %>
+        <%= link_to analyser_path, class: "inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition" do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Analyser un PDF
+        <% end %>
+        <% if user_signed_in? %>
+          <%= link_to "Déconnexion", destroy_user_session_path, data: { turbo_method: :delete }, class: "text-sm text-slate-600 hover:text-slate-900 transition" %>
+        <% else %>
+          <%= link_to "Connexion", new_user_session_path, class: "text-sm text-slate-600 hover:text-slate-900 transition" %>
+        <% end %>
+      </div>
+
+      <button data-action="click->navbar#toggle" class="md:hidden p-2 text-slate-600 hover:text-slate-900" aria-label="Menu">
+        <svg data-navbar-target="iconOpen" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg data-navbar-target="iconClose" class="hidden w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div data-navbar-target="menu" class="hidden md:hidden pb-4 space-y-1 border-t border-slate-200 mt-0 pt-3">
+      <%= link_to "Méthodologie", methodologie_path, class: "block px-3 py-2 text-base text-slate-700 hover:bg-slate-50 rounded-md" %>
+      <%= link_to "Qui sommes-nous", qui_sommes_nous_path, class: "block px-3 py-2 text-base text-slate-700 hover:bg-slate-50 rounded-md" %>
+      <% if user_signed_in? %>
+        <%= link_to "Tableau de bord", associations_path, class: "block px-3 py-2 text-base text-slate-700 hover:bg-slate-50 rounded-md" %>
+        <%= link_to "Exporter CSV", export_associations_path, class: "block px-3 py-2 text-base text-slate-700 hover:bg-slate-50 rounded-md" %>
+        <%= link_to "Déconnexion", destroy_user_session_path, data: { turbo_method: :delete }, class: "block px-3 py-2 text-base text-slate-700 hover:bg-slate-50 rounded-md" %>
+      <% else %>
+        <%= link_to "Connexion", new_user_session_path, class: "block px-3 py-2 text-base text-slate-700 hover:bg-slate-50 rounded-md" %>
+      <% end %>
+      <%= link_to analyser_path, class: "block mt-2 mx-3 bg-indigo-600 hover:bg-indigo-700 text-white text-center px-4 py-2.5 rounded-lg text-base font-semibold" do %>
+        + Analyser un PDF
+      <% end %>
+    </div>
+  </div>
+</nav>
