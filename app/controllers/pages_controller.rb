@@ -6,6 +6,9 @@ class PagesController < ApplicationController
   def home
   end
 
+  def qui_sommes_nous
+  end
+
   def methodologie
     rows = CSV.read(PHASE4_RESULTS_CSV, headers: true)
 

@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   devise_for :users, skip: [:registrations]
   root "pages#home"
   get "methodologie", to: "pages#methodologie"
+  get "/qui-sommes-nous", to: "pages#qui_sommes_nous", as: :qui_sommes_nous
 
   get  "/analyser",  to: "analyses#new",    as: :analyser
   post "/analyser",  to: "analyses#create"

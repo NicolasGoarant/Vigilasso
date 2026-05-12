@@ -1,0 +1,87 @@
+<% content_for :title, "Qui sommes-nous — Vigil'Asso" %>
+
+<div class="bg-slate-50 py-16">
+  <div class="max-w-4xl mx-auto px-6">
+
+    <header class="mb-12">
+      <p class="text-sm uppercase tracking-wider text-indigo-600 font-semibold mb-3">À propos de Vigil'Asso</p>
+      <h1 class="font-serif text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
+        Un outil pensé par et pour le service public.
+      </h1>
+    </header>
+
+    <div class="prose prose-lg max-w-none">
+
+      <div class="bg-white rounded-2xl p-8 mb-12 flex flex-col md:flex-row gap-8 items-center md:items-start shadow-sm">
+        <%= image_tag "nicolas_goarant.jpeg",
+            alt: "Nicolas Goarant",
+            class: "w-48 h-48 rounded-full object-cover flex-shrink-0" %>
+
+        <div class="flex-1">
+          <h2 class="font-serif text-2xl font-semibold text-slate-900 mt-0 mb-3">
+            Vigil'Asso est porté par Nicolas Goarant.
+          </h2>
+
+          <p class="text-slate-700 leading-relaxed">
+            Pendant plus de quinze ans, j'ai collaboré dans des cabinets d'exécutifs territoriaux : Métropole du Grand Nancy, Ville de Paris, Assemblée nationale, Agglomération d'Évreux. J'y ai vu de l'intérieur les services qui pilotent le tissu associatif — et le poids du suivi financier sur des équipes qui n'ont ni le temps ni les outils pour analyser en profondeur les comptes annuels de 50, 100 ou 200 associations subventionnées.
+          </p>
+
+          <p class="text-slate-700 leading-relaxed mt-4">
+            En parallèle, je me suis formé au développement (Le Wagon, 2019) puis à la science des données (Le Wagon Data Science & AI, 2026). Vigil'Asso est né du croisement de ces deux mondes : la connaissance fine du fonctionnement institutionnel des collectivités, et les outils techniques pour leur faire gagner du temps sur des tâches répétitives.
+          </p>
+        </div>
+      </div>
+
+      <section class="mb-12">
+        <h2 class="font-serif text-3xl font-bold text-slate-900 mb-4">Une démarche civic tech</h2>
+
+        <p class="text-slate-700 leading-relaxed">
+          Je développe plusieurs outils libres au service de l'intérêt général :
+        </p>
+
+        <ul class="mt-6 space-y-3 list-none pl-0">
+          <li class="flex items-start gap-3">
+            <span class="text-indigo-600 font-bold mt-1">→</span>
+            <span><strong class="text-slate-900">Déclic</strong> — cartographie de l'engagement citoyen à Nancy</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-indigo-600 font-bold mt-1">→</span>
+            <span><strong class="text-slate-900">L'Antichambre</strong> — plateforme dédiée aux métiers de cabinet politique</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-indigo-600 font-bold mt-1">→</span>
+            <span><strong class="text-slate-900">Les Tisserands</strong> — accompagnement numérique des personnes déplacées</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-indigo-600 font-bold mt-1">→</span>
+            <span><strong class="text-slate-900">Vigil'Asso</strong> — aide à la décision pour le suivi des associations subventionnées</span>
+          </li>
+        </ul>
+
+        <p class="text-slate-700 leading-relaxed mt-6">
+          Ces projets partagent une conviction : la technologie peut <strong>simplifier le travail des agents publics et des acteurs associatifs</strong>, à condition d'être pensée avec eux et publiée en transparence.
+        </p>
+      </section>
+
+      <section class="mb-12 bg-indigo-50 rounded-2xl p-8">
+        <h2 class="font-serif text-2xl font-bold text-slate-900 mt-0 mb-4">Vous voulez en savoir plus ?</h2>
+
+        <div class="space-y-3">
+          <p class="text-slate-700">
+            <strong>Méthodologie de Vigil'Asso :</strong>
+            <%= link_to "consulter la méthodologie complète →", methodologie_path, class: "text-indigo-600 hover:text-indigo-800 underline" %>
+          </p>
+          <p class="text-slate-700">
+            <strong>Code source :</strong>
+            <%= link_to "Vigil'Asso sur GitHub →", "https://github.com/NicolasGoarant/Vigilasso", target: "_blank", rel: "noopener", class: "text-indigo-600 hover:text-indigo-800 underline" %>
+          </p>
+          <p class="text-slate-700">
+            <strong>Contact :</strong>
+            <%= link_to "contact@vigilasso.fr", "mailto:contact@vigilasso.fr", class: "text-indigo-600 hover:text-indigo-800 underline" %>
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
