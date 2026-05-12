@@ -52,7 +52,7 @@ end
 
 
 gem "anthropic", "~> 1.24"
-gem "devise", "~> 4.9"
+gem "devise", "~> 5.0"
 
 gem "pagy", "~> 43.4"
 
