@@ -26,11 +26,12 @@
             </div>
             <%= link_to "Vigil'Asso", root_path, class: "font-semibold text-slate-900 tracking-tight" %>
           </div>
-          <% if user_signed_in? %>
-            <nav class="hidden md:flex items-center gap-4 text-sm text-slate-600">
-              <%= link_to "Tableau de bord", associations_path, class: "hover:text-slate-900 transition-colors" %>
-            </nav>
-          <% end %>
+          <nav class="flex items-center gap-4 text-sm text-slate-600">
+            <% if user_signed_in? %>
+              <%= link_to "Tableau de bord", associations_path, class: "hidden md:inline hover:text-slate-900 transition-colors" %>
+            <% end %>
+            <%= link_to "Qui sommes-nous", qui_sommes_nous_path, class: "hover:text-slate-900 transition-colors" %>
+          </nav>
         </div>
         <div class="flex items-center gap-2">
           <% if user_signed_in? %>
