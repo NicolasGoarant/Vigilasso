@@ -57,6 +57,6 @@ gem "devise", "~> 4.9"
 gem "pagy", "~> 43.4"
 
 gem "noticed", "~> 3.0"
-gem "connection_pool", "2.5.5"
+gem "connection_pool", "3.0.2"
 
 gem "dotenv-rails", "~> 3.2", groups: [:development, :test]
